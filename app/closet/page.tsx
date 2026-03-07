@@ -41,6 +41,7 @@ interface Outfit {
   bottom: ClothingItem | null
   shoes: ClothingItem | null
   score: number
+  accuracy: number
   explanation: string
 }
 
@@ -850,10 +851,12 @@ disabled={!newItem.name || !newItem.category || !newItem.type || !newItem.color?
                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
                           <Heart className="h-4 w-4 text-primary" />
                         </div>
-                        <div>
-                          <p className="text-sm font-medium">Outfit {index + 1}</p>
-                          <p className="text-xs text-muted-foreground">Score: {outfit.score}/10</p>
-                        </div>
+<div>
+  <p className="text-sm font-medium">Outfit {index + 1}</p>
+  <p className="text-xs text-muted-foreground">
+    {outfit.accuracy !== undefined ? `${outfit.accuracy}% accuracy` : `Score: ${outfit.score}/10`}
+  </p>
+  </div>
                       </div>
                       <div className="grid grid-cols-4 gap-2">
                         {outfit.layer && (

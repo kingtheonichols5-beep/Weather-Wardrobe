@@ -61,6 +61,7 @@ interface Outfit {
   bottom: ClothingItem | null
   shoes: ClothingItem | null
   score: number
+  accuracy: number
   explanation: string
 }
 
@@ -342,27 +343,47 @@ function generateOutfit(clothes: ClothingItem[], weatherCategory: string, styleP
     ? selectItemWithStylePriority(shoes, stylePreferences, usedIds) 
     : clothes.find(c => c.category === "shoes") || null
 
-  // Calculate a score based on how well items match style preferences
+  // Calculate accuracy based on weather and style matching
   const matchedItems = [layer, top, bottom, shoe].filter(Boolean) as ClothingItem[]
-  const totalStyleScore = matchedItems.reduce((sum, item) => sum + getStyleMatchScore(item, stylePreferences), 0)
-  const baseScore = 7.5 + (Math.random() * 2)
-  const styleBonus = stylePreferences.length > 0 && matchedItems.length > 0 
-    ? Math.min(2, totalStyleScore / matchedItems.length * 0.3) 
-    : 0
-  const score = Math.min(10, Math.round((baseScore + styleBonus) * 10) / 10)
   
-  const explanations = stylePreferences.length > 0 && totalStyleScore > 0
-    ? [
-        `Great choices that match your ${stylePreferences.join(" & ").toLowerCase()} style preferences.`,
-        `Outfit curated based on your ${stylePreferences[0].toLowerCase()} style preference.`,
-        `This combination reflects your preferred ${stylePreferences.join(", ").toLowerCase()} aesthetic.`,
-      ]
-    : [
-        "Great color coordination and weather-appropriate choices.",
-        "Perfect balance of style and comfort for today's weather.",
-        "A versatile outfit that works well for the current conditions.",
-        "Good combination of pieces that complement each other nicely.",
-      ]
+  // Weather accuracy: percentage of items that match the weather category directly (not just N/A)
+  const weatherMatchCount = matchedItems.filter(item => 
+    item.temperature.includes(weatherCategory)
+  ).length
+  const weatherAccuracy = matchedItems.length > 0 ? (weatherMatchCount / matchedItems.length) * 100 : 0
+  
+  // Style accuracy: based on style preference matching
+  const totalStyleScore = matchedItems.reduce((sum, item) => sum + getStyleMatchScore(item, stylePreferences), 0)
+  const maxPossibleStyleScore = matchedItems.length * 5 // Max score per item is roughly 5
+  const styleAccuracy = stylePreferences.length > 0 && matchedItems.length > 0
+    ? Math.min(100, (totalStyleScore / maxPossibleStyleScore) * 100)
+    : 100 // If no style preferences, consider it 100% match
+  
+  // Combined accuracy (weighted: 60% weather, 40% style)
+  const accuracy = Math.round(
+    stylePreferences.length > 0 
+      ? (weatherAccuracy * 0.6) + (styleAccuracy * 0.4)
+      : weatherAccuracy
+  )
+  
+  // Score based on accuracy (scale 1-10)
+  const score = Math.round((accuracy / 10) * 10) / 10
+  
+  // Dynamic explanation based on accuracy
+  let explanation = ""
+  if (accuracy >= 90) {
+    explanation = stylePreferences.length > 0
+      ? `Excellent match! This outfit perfectly suits the ${weatherCategory} weather and your ${stylePreferences.join(" & ").toLowerCase()} style.`
+      : `Excellent match! This outfit is perfectly suited for ${weatherCategory} weather conditions.`
+  } else if (accuracy >= 70) {
+    explanation = stylePreferences.length > 0
+      ? `Great combination that balances ${weatherCategory} weather needs with your ${stylePreferences[0].toLowerCase()} aesthetic.`
+      : `Great weather-appropriate choices for ${weatherCategory} conditions.`
+  } else if (accuracy >= 50) {
+    explanation = "A versatile outfit that works reasonably well for the current conditions."
+  } else {
+    explanation = "This outfit may need some adjustments for optimal comfort in current conditions."
+  }
 
   return {
     layer,
@@ -370,7 +391,8 @@ function generateOutfit(clothes: ClothingItem[], weatherCategory: string, styleP
     bottom,
     shoes: shoe,
     score,
-    explanation: explanations[Math.floor(Math.random() * explanations.length)],
+    accuracy,
+    explanation,
   }
 }
 
@@ -1047,12 +1069,21 @@ alts.push(generateOutfit(clothes, weatherCategory, settings.stylePreference))
               )}
             </div>
 
-            {/* Score */}
-            <div className="rounded-2xl bg-secondary p-6 text-center">
-              <p className="mb-2 text-sm font-medium text-muted-foreground">Outfit Rating</p>
-              <p className="text-4xl font-bold">{outfit.score.toFixed(1)} / 10</p>
-              <p className="mt-2 text-muted-foreground">{outfit.explanation}</p>
-            </div>
+{/* Score & Accuracy */}
+  <div className="rounded-2xl bg-secondary p-6 text-center">
+  <div className="mb-4 flex items-center justify-center gap-6">
+    <div>
+      <p className="text-sm font-medium text-muted-foreground">Rating</p>
+      <p className="text-3xl font-bold">{outfit.score.toFixed(1)}/10</p>
+    </div>
+    <div className="h-12 w-px bg-border" />
+    <div>
+      <p className="text-sm font-medium text-muted-foreground">Accuracy</p>
+      <p className="text-3xl font-bold">{outfit.accuracy}%</p>
+    </div>
+  </div>
+  <p className="text-muted-foreground">{outfit.explanation}</p>
+  </div>
 
             {/* Actions */}
             <div className="flex justify-center gap-4">
