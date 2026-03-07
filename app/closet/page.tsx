@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Navigation } from "@/components/navigation"
@@ -82,8 +82,12 @@ function saveClothes(clothes: ClothingItem[]) {
 }
 
 export default function ClosetPage() {
-  const [clothes, setClothes] = useState<ClothingItem[]>(() => getStoredClothes())
+  const [clothes, setClothes] = useState<ClothingItem[]>([])
   const [isUploadOpen, setIsUploadOpen] = useState(false)
+  
+  useEffect(() => {
+    setClothes(getStoredClothes())
+  }, [])
   const [uploadStep, setUploadStep] = useState(1)
   const [newItem, setNewItem] = useState<Partial<ClothingItem>>({
     temperature: [],
