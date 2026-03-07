@@ -308,10 +308,12 @@ function selectItemWithStylePriority(
 }
 
 function generateOutfit(clothes: ClothingItem[], weatherCategory: string, stylePreferences: string[] = []): Outfit {
-  const layers = clothes.filter(c => c.category === "layer" && c.temperature.includes(weatherCategory))
-  const tops = clothes.filter(c => c.category === "top" && c.temperature.includes(weatherCategory))
-  const bottoms = clothes.filter(c => c.category === "bottom" && c.temperature.includes(weatherCategory))
-  const shoes = clothes.filter(c => c.category === "shoes" && c.temperature.includes(weatherCategory))
+  // Items with "n/a" in temperature match any weather condition
+  const matchesWeather = (c: ClothingItem) => c.temperature.includes(weatherCategory) || c.temperature.includes("n/a")
+  const layers = clothes.filter(c => c.category === "layer" && matchesWeather(c))
+  const tops = clothes.filter(c => c.category === "top" && matchesWeather(c))
+  const bottoms = clothes.filter(c => c.category === "bottom" && matchesWeather(c))
+  const shoes = clothes.filter(c => c.category === "shoes" && matchesWeather(c))
 
   const usedIds = new Set<string>()
 
