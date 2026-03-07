@@ -17,8 +17,11 @@ import {
   Heart,
   ThermometerSun,
   Droplets,
-  Shirt
+  Shirt,
+  Search,
+  Loader2
 } from "lucide-react"
+import { Input } from "@/components/ui/input"
 
 interface ClothingItem {
   id: string
@@ -134,10 +137,57 @@ export default function OutfitPage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [locationError, setLocationError] = useState<string | null>(null)
   const [isSaved, setIsSaved] = useState(false)
+  const [showLocationSearch, setShowLocationSearch] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [searchResults, setSearchResults] = useState<{ name: string; country: string; state?: string; lat: number; lon: number }[]>([])
+  const [isSearching, setIsSearching] = useState(false)
 
   useEffect(() => {
     setClothes(getStoredClothes())
   }, [])
+
+  const weatherCodes: Record<number, string> = {
+    0: "Clear", 1: "Clear", 2: "Cloudy", 3: "Overcast",
+    45: "Foggy", 48: "Foggy", 51: "Rainy", 53: "Rainy", 55: "Rainy",
+    61: "Rainy", 63: "Rainy", 65: "Rainy", 71: "Snowy", 73: "Snowy", 75: "Snowy",
+    77: "Snowy", 80: "Rainy", 81: "Rainy", 82: "Rainy", 85: "Snowy", 86: "Snowy",
+  }
+
+  const fetchWeatherByCoords = async (latitude: number, longitude: number, cityName?: string) => {
+    setIsLoading(true)
+    setLocationError(null)
+    setShowLocationSearch(false)
+    setSearchQuery("")
+    setSearchResults([])
+
+    try {
+      let city = cityName
+      if (!city) {
+        const geoResponse = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+        )
+        const geoData = await geoResponse.json()
+        city = geoData.address?.city || geoData.address?.town || geoData.address?.village || "Unknown"
+      }
+
+      const weatherResponse = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&temperature_unit=fahrenheit`
+      )
+      const weatherData = await weatherResponse.json()
+
+      setWeather({
+        temperature: Math.round(weatherData.current.temperature_2m),
+        condition: weatherCodes[weatherData.current.weather_code] || "Clear",
+        humidity: weatherData.current.relative_humidity_2m,
+        windSpeed: Math.round(weatherData.current.wind_speed_10m),
+        location: city,
+      })
+    } catch {
+      setLocationError("Unable to fetch weather data. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const fetchWeather = async () => {
     setIsLoading(true)
@@ -152,39 +202,49 @@ export default function OutfitPage() {
       })
 
       const { latitude, longitude } = position.coords
-
-      // Reverse geocoding for location name
-      const geoResponse = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
-      )
-      const geoData = await geoResponse.json()
-      const city = geoData.address?.city || geoData.address?.town || geoData.address?.village || "Unknown"
-
-      // Weather from Open-Meteo
-      const weatherResponse = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&temperature_unit=fahrenheit`
-      )
-      const weatherData = await weatherResponse.json()
-
-      const weatherCodes: Record<number, string> = {
-        0: "Clear", 1: "Clear", 2: "Cloudy", 3: "Overcast",
-        45: "Foggy", 48: "Foggy", 51: "Rainy", 53: "Rainy", 55: "Rainy",
-        61: "Rainy", 63: "Rainy", 65: "Rainy", 71: "Snowy", 73: "Snowy", 75: "Snowy",
-        77: "Snowy", 80: "Rainy", 81: "Rainy", 82: "Rainy", 85: "Snowy", 86: "Snowy",
-      }
-
-      setWeather({
-        temperature: Math.round(weatherData.current.temperature_2m),
-        condition: weatherCodes[weatherData.current.weather_code] || "Clear",
-        humidity: weatherData.current.relative_humidity_2m,
-        windSpeed: Math.round(weatherData.current.wind_speed_10m),
-        location: city,
-      })
+      await fetchWeatherByCoords(latitude, longitude)
     } catch {
       setLocationError("Unable to get your location. Please enable location services.")
-    } finally {
       setIsLoading(false)
     }
+  }
+
+  const searchLocations = async (query: string) => {
+    if (query.length < 2) {
+      setSearchResults([])
+      return
+    }
+    setIsSearching(true)
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&addressdetails=1`
+      )
+      const data = await response.json()
+      const results = data.map((item: { display_name: string; lat: string; lon: string; address?: { city?: string; town?: string; village?: string; state?: string; country?: string } }) => ({
+        name: item.address?.city || item.address?.town || item.address?.village || item.display_name.split(",")[0],
+        country: item.address?.country || "",
+        state: item.address?.state,
+        lat: parseFloat(item.lat),
+        lon: parseFloat(item.lon),
+      }))
+      setSearchResults(results)
+    } catch {
+      setSearchResults([])
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  const handleSearchInput = (value: string) => {
+    setSearchQuery(value)
+    const timeoutId = setTimeout(() => {
+      searchLocations(value)
+    }, 300)
+    return () => clearTimeout(timeoutId)
+  }
+
+  const selectLocation = (result: { name: string; lat: number; lon: number }) => {
+    fetchWeatherByCoords(result.lat, result.lon, result.name)
   }
 
   const handleGenerateOutfit = () => {
@@ -249,14 +309,60 @@ export default function OutfitPage() {
                 </Button>
               </>
             ) : (
-              <>
-                <MapPin className="mb-4 h-12 w-12 text-muted-foreground" />
-                <p className="mb-4 text-muted-foreground">Allow location access for weather-based recommendations</p>
+              <div className="flex flex-col items-center gap-4">
+                <MapPin className="h-12 w-12 text-muted-foreground" />
+                <p className="text-muted-foreground">Allow location access for weather-based recommendations</p>
                 <Button onClick={fetchWeather} className="rounded-full">
                   <MapPin className="mr-2 h-4 w-4" />
                   Enable Location
                 </Button>
-              </>
+                <Button 
+                  variant="outline" 
+                  className="rounded-full"
+                  onClick={() => setShowLocationSearch(!showLocationSearch)}
+                >
+                  <Search className="mr-2 h-4 w-4" />
+                  Select a Location
+                </Button>
+
+                {showLocationSearch && (
+                  <div className="relative w-full max-w-sm">
+                    <div className="relative">
+                      <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        placeholder="Search for a city..."
+                        value={searchQuery}
+                        onChange={(e) => handleSearchInput(e.target.value)}
+                        className="h-12 rounded-full border-border bg-background pl-11 pr-4"
+                        autoFocus
+                      />
+                      {isSearching && (
+                        <Loader2 className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+                      )}
+                    </div>
+
+                    {searchResults.length > 0 && (
+                      <div className="absolute left-0 right-0 top-full z-10 mt-2 overflow-hidden rounded-2xl border border-border bg-background shadow-lg">
+                        {searchResults.map((result, index) => (
+                          <button
+                            key={`${result.lat}-${result.lon}-${index}`}
+                            className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-secondary"
+                            onClick={() => selectLocation(result)}
+                          >
+                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <p className="font-medium">{result.name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {result.state ? `${result.state}, ` : ""}{result.country}
+                              </p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             )}
           </div>
         ) : (
