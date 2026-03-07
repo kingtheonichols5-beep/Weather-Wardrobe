@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Navigation } from "@/components/navigation"
@@ -141,6 +141,7 @@ export default function OutfitPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [searchResults, setSearchResults] = useState<{ name: string; country: string; state?: string; lat: number; lon: number }[]>([])
   const [isSearching, setIsSearching] = useState(false)
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     setClothes(getStoredClothes())
@@ -237,10 +238,12 @@ export default function OutfitPage() {
 
   const handleSearchInput = (value: string) => {
     setSearchQuery(value)
-    const timeoutId = setTimeout(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
+    searchTimeoutRef.current = setTimeout(() => {
       searchLocations(value)
     }, 300)
-    return () => clearTimeout(timeoutId)
   }
 
   const selectLocation = (result: { name: string; lat: number; lon: number }) => {
