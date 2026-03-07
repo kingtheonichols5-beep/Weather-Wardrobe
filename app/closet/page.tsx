@@ -49,7 +49,7 @@ const categoryTypes = {
   top: ["T-Shirt", "Tank Top", "Sweater", "Flannel", "Button-Up", "Polo", "Long Sleeve", "Blouse", "Henley"],
   bottom: ["Jeans", "Shorts", "Sweatpants", "Joggers", "Chinos", "Skirt", "Dress Pants"],
   shoes: ["Sneakers", "Boots", "Sandals", "Loafers", "Running Shoes", "Dress Shoes"],
-  accessories: ["Rings", "Earrings", "Necklaces", "Hats", "Sunglasses", "Watches", "Glasses"],
+  accessories: ["Rings", "Earrings", "Necklaces", "Beanies", "Caps", "Other Hats", "Sunglasses", "Watches", "Glasses"],
 }
 
 const colorOptions = [
