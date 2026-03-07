@@ -164,8 +164,8 @@ export default function ClosetPage() {
     const isShoes = newItem.category === "shoes"
     const isAccessories = newItem.category === "accessories"
     const hasBaseFields = newItem.name && newItem.category && newItem.type && newItem.color?.length && newItem.temperature?.length && newItem.imageUrl
-    const hasRequiredFields = isAccessories ? (hasBaseFields && newItem.condition?.length) : (hasBaseFields && newItem.fit)
-    const hasCondition = isShoes || (newItem.condition?.length ?? 0) > 0
+    const hasRequiredFields = (isAccessories || isShoes) ? (hasBaseFields && newItem.condition?.length) : (hasBaseFields && newItem.fit)
+    const hasCondition = (newItem.condition?.length ?? 0) > 0
     
     if (hasRequiredFields && hasCondition) {
       const item: ClothingItem = {
@@ -174,7 +174,7 @@ export default function ClosetPage() {
         category: newItem.category as ClothingItem["category"],
         type: newItem.type,
         color: newItem.color || [],
-        fit: isAccessories ? "N/A" : newItem.fit,
+        fit: (isAccessories || isShoes) ? "N/A" : newItem.fit,
         condition: newItem.condition || [],
         temperature: newItem.temperature,
         imageUrl: newItem.imageUrl,
@@ -218,8 +218,8 @@ const handleDeleteItem = (id: string) => {
     const isShoes = newItem.category === "shoes"
     const isAccessories = newItem.category === "accessories"
     const hasBaseFields = newItem.name && newItem.category && newItem.type && newItem.color?.length && newItem.temperature?.length && newItem.imageUrl
-    const hasRequiredFields = isAccessories ? (hasBaseFields && newItem.condition?.length) : (hasBaseFields && newItem.fit)
-    const hasCondition = isShoes || (newItem.condition?.length ?? 0) > 0
+    const hasRequiredFields = (isAccessories || isShoes) ? (hasBaseFields && newItem.condition?.length) : (hasBaseFields && newItem.fit)
+    const hasCondition = (newItem.condition?.length ?? 0) > 0
     
     if (hasRequiredFields && hasCondition && editingItem) {
       const updatedItem: ClothingItem = {
@@ -228,7 +228,7 @@ const handleDeleteItem = (id: string) => {
         category: newItem.category as ClothingItem["category"],
         type: newItem.type!,
         color: newItem.color || [],
-        fit: isAccessories ? "N/A" : newItem.fit!,
+        fit: (isAccessories || isShoes) ? "N/A" : newItem.fit!,
         condition: newItem.condition || [],
         temperature: newItem.temperature!,
         imageUrl: newItem.imageUrl!,
@@ -450,22 +450,23 @@ const handleDeleteItem = (id: string) => {
                                       </div>
                                     ) : newItem.category === "shoes" ? (
                                       <div>
-                                        <label className="mb-2 block text-sm font-medium">Condition</label>
-                                        <Select
-                                          value={newItem.fit}
-                                          onValueChange={(value) => setNewItem((prev) => ({ ...prev, fit: value }))}
-                                        >
-                                          <SelectTrigger>
-                                            <SelectValue placeholder="Select condition" />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            {shoeConditionOptions.map((condition) => (
-                                              <SelectItem key={condition} value={condition}>
-                                                {condition}
-                                              </SelectItem>
-                                            ))}
-                                          </SelectContent>
-                                        </Select>
+                                        <label className="mb-2 block text-sm font-medium">Condition (select all that apply)</label>
+                                        <div className="flex flex-wrap gap-2">
+                                          {shoeConditionOptions.map((condition) => (
+                                            <button
+                                              key={condition}
+                                              type="button"
+                                              className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                                                newItem.condition?.includes(condition)
+                                                  ? "bg-primary text-primary-foreground"
+                                                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                                              }`}
+                                              onClick={() => toggleCondition(condition)}
+                                            >
+                                              {condition}
+                                            </button>
+                                          ))}
+                                        </div>
                                       </div>
                                     ) : (
                                       <div className="space-y-4">
@@ -537,7 +538,7 @@ const handleDeleteItem = (id: string) => {
                     <Button
                       className="flex-1"
                       onClick={handleSaveItem}
-                      disabled={!newItem.name || !newItem.category || !newItem.type || !newItem.color?.length || !newItem.temperature?.length || (newItem.category !== "shoes" && newItem.category !== "accessories" && !newItem.fit) || (newItem.category !== "shoes" && !newItem.condition?.length)}
+disabled={!newItem.name || !newItem.category || !newItem.type || !newItem.color?.length || !newItem.temperature?.length || (newItem.category !== "shoes" && newItem.category !== "accessories" && !newItem.fit) || !newItem.condition?.length}
                     >
                       Add to Closet
                     </Button>
@@ -661,22 +662,23 @@ const handleDeleteItem = (id: string) => {
                     </div>
                   ) : newItem.category === "shoes" ? (
                     <div>
-                      <label className="mb-2 block text-sm font-medium">Condition</label>
-                      <Select
-                        value={newItem.fit}
-                        onValueChange={(value) => setNewItem((prev) => ({ ...prev, fit: value }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select condition" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {shoeConditionOptions.map((condition) => (
-                            <SelectItem key={condition} value={condition}>
-                              {condition}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <label className="mb-2 block text-sm font-medium">Condition (select all that apply)</label>
+                      <div className="flex flex-wrap gap-2">
+                        {shoeConditionOptions.map((condition) => (
+                          <button
+                            key={condition}
+                            type="button"
+                            className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                              newItem.condition?.includes(condition)
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                            }`}
+                            onClick={() => toggleCondition(condition)}
+                          >
+                            {condition}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -748,7 +750,7 @@ const handleDeleteItem = (id: string) => {
                   <Button
                     className="flex-1"
                     onClick={handleSaveEdit}
-                    disabled={!newItem.name || !newItem.category || !newItem.type || !newItem.color?.length || !newItem.temperature?.length || (newItem.category !== "shoes" && newItem.category !== "accessories" && !newItem.fit) || (newItem.category !== "shoes" && !newItem.condition?.length)}
+                    disabled={!newItem.name || !newItem.category || !newItem.type || !newItem.color?.length || !newItem.temperature?.length || (newItem.category !== "shoes" && newItem.category !== "accessories" && !newItem.fit) || !newItem.condition?.length}
                   >
                     Save Changes
                   </Button>
