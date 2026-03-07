@@ -155,6 +155,7 @@ export default function OutfitPage() {
   }
 
   const fetchWeatherByCoords = async (latitude: number, longitude: number, cityName?: string) => {
+    console.log("[v0] fetchWeatherByCoords called with:", { latitude, longitude, cityName })
     setIsLoading(true)
     setLocationError(null)
     setShowLocationSearch(false)
@@ -164,26 +165,35 @@ export default function OutfitPage() {
     try {
       let city = cityName
       if (!city) {
+        console.log("[v0] Fetching city name from coordinates...")
         const geoResponse = await fetch(
           `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
         )
+        console.log("[v0] Geo response status:", geoResponse.status)
         const geoData = await geoResponse.json()
+        console.log("[v0] Geo data:", geoData)
         city = geoData.address?.city || geoData.address?.town || geoData.address?.village || "Unknown"
       }
 
+      console.log("[v0] Fetching weather data...")
       const weatherResponse = await fetch(
         `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&temperature_unit=fahrenheit`
       )
+      console.log("[v0] Weather response status:", weatherResponse.status)
       const weatherData = await weatherResponse.json()
+      console.log("[v0] Weather data:", weatherData)
 
-      setWeather({
+      const newWeather = {
         temperature: Math.round(weatherData.current.temperature_2m),
         condition: weatherCodes[weatherData.current.weather_code] || "Clear",
         humidity: weatherData.current.relative_humidity_2m,
         windSpeed: Math.round(weatherData.current.wind_speed_10m),
         location: city,
-      })
-    } catch {
+      }
+      console.log("[v0] Setting weather to:", newWeather)
+      setWeather(newWeather)
+    } catch (error) {
+      console.log("[v0] Error fetching weather:", error)
       setLocationError("Unable to fetch weather data. Please try again.")
     } finally {
       setIsLoading(false)
@@ -191,10 +201,12 @@ export default function OutfitPage() {
   }
 
   const fetchWeather = async () => {
+    console.log("[v0] fetchWeather called")
     setIsLoading(true)
     setLocationError(null)
 
     try {
+      console.log("[v0] Requesting geolocation...")
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
           enableHighAccuracy: true,
@@ -203,14 +215,17 @@ export default function OutfitPage() {
       })
 
       const { latitude, longitude } = position.coords
+      console.log("[v0] Got coordinates:", { latitude, longitude })
       await fetchWeatherByCoords(latitude, longitude)
-    } catch {
+    } catch (error) {
+      console.log("[v0] Geolocation error:", error)
       setLocationError("Unable to get your location. Please enable location services.")
       setIsLoading(false)
     }
   }
 
   const searchLocations = async (query: string) => {
+    console.log("[v0] searchLocations called with:", query)
     if (query.length < 2) {
       setSearchResults([])
       return
@@ -220,7 +235,9 @@ export default function OutfitPage() {
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&addressdetails=1`
       )
+      console.log("[v0] Search response status:", response.status)
       const data = await response.json()
+      console.log("[v0] Search data:", data)
       const results = data.map((item: { display_name: string; lat: string; lon: string; address?: { city?: string; town?: string; village?: string; state?: string; country?: string } }) => ({
         name: item.address?.city || item.address?.town || item.address?.village || item.display_name.split(",")[0],
         country: item.address?.country || "",
@@ -228,8 +245,10 @@ export default function OutfitPage() {
         lat: parseFloat(item.lat),
         lon: parseFloat(item.lon),
       }))
+      console.log("[v0] Search results:", results)
       setSearchResults(results)
-    } catch {
+    } catch (error) {
+      console.log("[v0] Search error:", error)
       setSearchResults([])
     } finally {
       setIsSearching(false)
