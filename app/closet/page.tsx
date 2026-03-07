@@ -77,6 +77,7 @@ const temperatureOptions = [
   { value: "mild", label: "Mild" },
   { value: "warm", label: "Warm" },
   { value: "hot", label: "Hot" },
+  { value: "n/a", label: "N/A" },
 ]
 
 const STORAGE_KEY = "stylist-closet"
