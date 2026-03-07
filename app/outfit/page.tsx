@@ -244,6 +244,7 @@ export default function OutfitPage() {
   const [isSearching, setIsSearching] = useState(false)
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [selectedDay, setSelectedDay] = useState<ForecastDay | null>(null)
+  const [outfitDay, setOutfitDay] = useState<ForecastDay | null>(null)
 
   useEffect(() => {
     setClothes(getStoredClothes())
@@ -385,6 +386,7 @@ export default function OutfitPage() {
     
     setIsGenerating(true)
     setIsSaved(false)
+    setOutfitDay(null)
     
     setTimeout(() => {
       const weatherCategory = getWeatherCategory(weather.temperature)
@@ -407,6 +409,7 @@ export default function OutfitPage() {
     setIsGenerating(true)
     setIsSaved(false)
     setSelectedDay(null)
+    setOutfitDay(day)
     
     setTimeout(() => {
       const avgTemp = (day.high + day.low) / 2
@@ -646,10 +649,7 @@ export default function OutfitPage() {
               {/* Generate Outfit Button */}
               <div className="mb-6">
                 <Button 
-                  onClick={() => {
-                    console.log("[v0] Generate outfit button clicked for day:", selectedDay)
-                    handleGenerateOutfitForDay(selectedDay)
-                  }}
+                  onClick={() => handleGenerateOutfitForDay(selectedDay)}
                   disabled={clothes.length === 0 || isGenerating}
                   className="w-full rounded-full bg-black py-6 text-white hover:bg-black/90"
                   size="lg"
@@ -832,7 +832,9 @@ export default function OutfitPage() {
             {/* Weather Context */}
             <div className="text-center">
               <p className="text-lg text-muted-foreground">
-                {"Today is "}{weather?.temperature}°F and {weather?.condition.toLowerCase()}
+                {outfitDay 
+                    ? `${outfitDay.dayName} will be ${outfitDay.high}°F / ${outfitDay.low}°F and ${outfitDay.condition.toLowerCase()}`
+                    : `Today is ${weather?.temperature}°F and ${weather?.condition.toLowerCase()}`}
               </p>
             </div>
 
