@@ -3,11 +3,10 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Shirt, Upload, Sun, Settings } from "lucide-react"
+import { Shirt, Sun, Settings } from "lucide-react"
 
 const navItems = [
   { href: "/closet", label: "My Closet", icon: Shirt },
-  { href: "/upload", label: "Upload Clothes", icon: Upload },
   { href: "/outfit", label: "Today's Outfit", icon: Sun },
   { href: "/settings", label: "Settings", icon: Settings },
 ]
