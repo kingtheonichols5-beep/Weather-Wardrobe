@@ -1,22 +1,15 @@
 import type React from "react"
-import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
-import { Instrument_Serif } from "next/font/google"
+import type { Metadata, Viewport } from "next"
+import { Inter } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 
-const _geist = Geist({ subsets: ["latin"] })
-const _geistMono = Geist_Mono({ subsets: ["latin"] })
-const _instrumentSerif = Instrument_Serif({
-  subsets: ["latin"],
-  weight: "400",
-  style: ["normal", "italic"],
-})
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Weather Wardrobe – AI Outfit Recommendations",
+  title: "Stylist – AI Weather Outfit Recommendations",
   description:
-    "Get personalized outfit recommendations based on your local weather conditions. Powered by AI for smart, weather-appropriate styling.",
+    "Upload your clothes and let AI design outfits based on weather, color matching, and style. Get personalized recommendations every day.",
   generator: "v0.app",
   icons: {
     icon: [
@@ -35,6 +28,12 @@ export const metadata: Metadata = {
     ],
     apple: "/apple-icon.png",
   },
+}
+
+export const viewport: Viewport = {
+  themeColor: "#ffffff",
+  width: "device-width",
+  initialScale: 1,
 }
 
 export default function RootLayout({
