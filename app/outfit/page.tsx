@@ -29,7 +29,7 @@ import { Input } from "@/components/ui/input"
 interface ClothingItem {
   id: string
   name: string
-  category: "layer" | "top" | "bottom" | "shoes"
+  category: "layer" | "top" | "bottom" | "shoes" | "accessories"
   type: string
   color: string
   fit: string

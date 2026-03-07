@@ -26,7 +26,7 @@ import { Plus, Upload, X, Shirt, Sparkles } from "lucide-react"
 interface ClothingItem {
   id: string
   name: string
-  category: "layer" | "top" | "bottom" | "shoes"
+  category: "layer" | "top" | "bottom" | "shoes" | "accessories"
   type: string
   color: string
   fit: string
@@ -40,6 +40,7 @@ const categoryTypes = {
   top: ["T-Shirt", "Tank Top", "Sweater", "Flannel", "Button-Up", "Polo", "Long Sleeve", "Blouse", "Henley"],
   bottom: ["Jeans", "Shorts", "Sweatpants", "Joggers", "Chinos", "Skirt", "Dress Pants"],
   shoes: ["Sneakers", "Boots", "Sandals", "Loafers", "Running Shoes", "Dress Shoes"],
+  accessories: ["Rings", "Earrings", "Necklaces", "Hats", "Sunglasses", "Watches", "Glasses"],
 }
 
 const colorOptions = [
@@ -133,8 +134,10 @@ export default function ClosetPage() {
 
   const handleSaveItem = () => {
     const isShoes = newItem.category === "shoes"
-    const hasRequiredFields = newItem.name && newItem.category && newItem.type && newItem.color && newItem.fit && newItem.temperature?.length && newItem.imageUrl
-    const hasCondition = isShoes || newItem.condition
+    const isAccessories = newItem.category === "accessories"
+    const hasBaseFields = newItem.name && newItem.category && newItem.type && newItem.color && newItem.temperature?.length && newItem.imageUrl
+    const hasRequiredFields = isAccessories ? hasBaseFields : (hasBaseFields && newItem.fit)
+    const hasCondition = isShoes || isAccessories || newItem.condition
     
     if (hasRequiredFields && hasCondition) {
       const item: ClothingItem = {
@@ -143,7 +146,7 @@ export default function ClosetPage() {
         category: newItem.category as ClothingItem["category"],
         type: newItem.type,
         color: newItem.color,
-        fit: newItem.fit,
+        fit: isAccessories ? "N/A" : newItem.fit,
         condition: newItem.condition,
         temperature: newItem.temperature,
         imageUrl: newItem.imageUrl,
@@ -182,6 +185,7 @@ export default function ClosetPage() {
     top: clothes.filter((c) => c.category === "top"),
     bottom: clothes.filter((c) => c.category === "bottom"),
     shoes: clothes.filter((c) => c.category === "shoes"),
+    accessories: clothes.filter((c) => c.category === "accessories"),
   }
 
   return (
@@ -273,12 +277,13 @@ export default function ClosetPage() {
                           <SelectTrigger>
                             <SelectValue placeholder="Select" />
                           </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="layer">Layer</SelectItem>
-                            <SelectItem value="top">Top</SelectItem>
-                            <SelectItem value="bottom">Bottom</SelectItem>
-                            <SelectItem value="shoes">Shoes</SelectItem>
-                          </SelectContent>
+<SelectContent>
+                                            <SelectItem value="layer">Layer</SelectItem>
+                                            <SelectItem value="top">Top</SelectItem>
+                                            <SelectItem value="bottom">Bottom</SelectItem>
+                                            <SelectItem value="shoes">Shoes</SelectItem>
+                                            <SelectItem value="accessories">Accessories</SelectItem>
+                                          </SelectContent>
                         </Select>
                       </div>
 
@@ -322,65 +327,65 @@ export default function ClosetPage() {
                       </div>
                     </div>
 
-                    {newItem.category === "shoes" ? (
-                      <div>
-                        <label className="mb-2 block text-sm font-medium">Condition</label>
-                        <Select
-                          value={newItem.fit}
-                          onValueChange={(value) => setNewItem((prev) => ({ ...prev, fit: value }))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select condition" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {shoeConditionOptions.map((condition) => (
-                              <SelectItem key={condition} value={condition}>
-                                {condition}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="mb-2 block text-sm font-medium">Fit</label>
-                          <Select
-                            value={newItem.fit}
-                            onValueChange={(value) => setNewItem((prev) => ({ ...prev, fit: value }))}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select fit" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {fitOptions.map((fit) => (
-                                <SelectItem key={fit} value={fit}>
-                                  {fit}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <label className="mb-2 block text-sm font-medium">Condition</label>
-                          <Select
-                            value={newItem.condition}
-                            onValueChange={(value) => setNewItem((prev) => ({ ...prev, condition: value }))}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select condition" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {(newItem.category === "layer" ? layerConditionOptions : conditionOptions).map((condition) => (
-                                <SelectItem key={condition} value={condition}>
-                                  {condition}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    )}
+{newItem.category === "accessories" ? null : newItem.category === "shoes" ? (
+                                      <div>
+                                        <label className="mb-2 block text-sm font-medium">Condition</label>
+                                        <Select
+                                          value={newItem.fit}
+                                          onValueChange={(value) => setNewItem((prev) => ({ ...prev, fit: value }))}
+                                        >
+                                          <SelectTrigger>
+                                            <SelectValue placeholder="Select condition" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {shoeConditionOptions.map((condition) => (
+                                              <SelectItem key={condition} value={condition}>
+                                                {condition}
+                                              </SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                    ) : (
+                                      <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                          <label className="mb-2 block text-sm font-medium">Fit</label>
+                                          <Select
+                                            value={newItem.fit}
+                                            onValueChange={(value) => setNewItem((prev) => ({ ...prev, fit: value }))}
+                                          >
+                                            <SelectTrigger>
+                                              <SelectValue placeholder="Select fit" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              {fitOptions.map((fit) => (
+                                                <SelectItem key={fit} value={fit}>
+                                                  {fit}
+                                                </SelectItem>
+                                              ))}
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
+                                        <div>
+                                          <label className="mb-2 block text-sm font-medium">Condition</label>
+                                          <Select
+                                            value={newItem.condition}
+                                            onValueChange={(value) => setNewItem((prev) => ({ ...prev, condition: value }))}
+                                          >
+                                            <SelectTrigger>
+                                              <SelectValue placeholder="Select condition" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              {(newItem.category === "layer" ? layerConditionOptions : conditionOptions).map((condition) => (
+                                                <SelectItem key={condition} value={condition}>
+                                                  {condition}
+                                                </SelectItem>
+                                              ))}
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
+                                      </div>
+                                    )}
 
                     <div>
                       <label className="mb-2 block text-sm font-medium">Best for Weather</label>
@@ -410,7 +415,7 @@ export default function ClosetPage() {
                     <Button
                       className="flex-1"
                       onClick={handleSaveItem}
-                      disabled={!newItem.name || !newItem.category || !newItem.type || !newItem.color || !newItem.fit || !newItem.temperature?.length || (newItem.category !== "shoes" && !newItem.condition)}
+                      disabled={!newItem.name || !newItem.category || !newItem.type || !newItem.color || !newItem.temperature?.length || (newItem.category !== "shoes" && newItem.category !== "accessories" && !newItem.fit) || (newItem.category !== "shoes" && newItem.category !== "accessories" && !newItem.condition)}
                     >
                       Add to Closet
                     </Button>
@@ -433,11 +438,11 @@ export default function ClosetPage() {
           </div>
         ) : (
           <div className="space-y-10">
-            {(["layer", "top", "bottom", "shoes"] as const).map((category) => (
+            {(["layer", "top", "bottom", "shoes", "accessories"] as const).map((category) => (
               groupedClothes[category].length > 0 && (
                 <section key={category}>
                   <h2 className="mb-4 text-lg font-semibold capitalize">
-                    {category === "layer" ? "Layers" : category === "top" ? "Tops" : category === "bottom" ? "Bottoms" : "Shoes"}{" "}
+                    {category === "layer" ? "Layers" : category === "top" ? "Tops" : category === "bottom" ? "Bottoms" : category === "shoes" ? "Shoes" : "Accessories"}{" "}
                     <span className="text-muted-foreground">({groupedClothes[category].length})</span>
                   </h2>
                   <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
