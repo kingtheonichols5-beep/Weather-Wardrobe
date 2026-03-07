@@ -644,23 +644,29 @@ export default function OutfitPage() {
               </div>
 
               {/* Generate Outfit Button */}
-              <Button 
-                onClick={() => handleGenerateOutfitForDay(selectedDay)}
-                disabled={clothes.length === 0 || isGenerating}
-                className="mb-6 w-full rounded-full bg-black text-white hover:bg-black/90"
-              >
-                {isGenerating ? (
-                  <>
-                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Make an outfit for this day
-                  </>
-                )}
-              </Button>
+              <div className="mb-6">
+                <Button 
+                  onClick={() => {
+                    console.log("[v0] Generate outfit button clicked for day:", selectedDay)
+                    handleGenerateOutfitForDay(selectedDay)
+                  }}
+                  disabled={clothes.length === 0 || isGenerating}
+                  className="w-full rounded-full bg-black py-6 text-white hover:bg-black/90"
+                  size="lg"
+                >
+                  {isGenerating ? (
+                    <>
+                      <RefreshCw className="mr-2 h-5 w-5 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-5 w-5" />
+                      Generate an outfit for this day
+                    </>
+                  )}
+                </Button>
+              </div>
 
               {/* Clothing Recommendations */}
               {(() => {
