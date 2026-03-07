@@ -28,9 +28,9 @@ interface ClothingItem {
   name: string
   category: "layer" | "top" | "bottom" | "shoes" | "accessories"
   type: string
-  color: string
+  color: string[]
   fit: string
-  condition?: string
+  condition: string[]
   temperature: string[]
   imageUrl: string
 }
@@ -92,7 +92,8 @@ export default function ClosetPage() {
   const [uploadStep, setUploadStep] = useState(1)
   const [newItem, setNewItem] = useState<Partial<ClothingItem>>({
     temperature: [],
-    condition: "",
+    condition: [],
+    color: [],
   })
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [dragActive, setDragActive] = useState(false)
@@ -135,9 +136,9 @@ export default function ClosetPage() {
   const handleSaveItem = () => {
     const isShoes = newItem.category === "shoes"
     const isAccessories = newItem.category === "accessories"
-    const hasBaseFields = newItem.name && newItem.category && newItem.type && newItem.color && newItem.temperature?.length && newItem.imageUrl
-    const hasRequiredFields = isAccessories ? (hasBaseFields && newItem.condition) : (hasBaseFields && newItem.fit)
-    const hasCondition = isShoes || newItem.condition
+    const hasBaseFields = newItem.name && newItem.category && newItem.type && newItem.color?.length && newItem.temperature?.length && newItem.imageUrl
+    const hasRequiredFields = isAccessories ? (hasBaseFields && newItem.condition?.length) : (hasBaseFields && newItem.fit)
+    const hasCondition = isShoes || (newItem.condition?.length ?? 0) > 0
     
     if (hasRequiredFields && hasCondition) {
       const item: ClothingItem = {
@@ -145,9 +146,9 @@ export default function ClosetPage() {
         name: newItem.name,
         category: newItem.category as ClothingItem["category"],
         type: newItem.type,
-        color: newItem.color,
+        color: newItem.color || [],
         fit: isAccessories ? "N/A" : newItem.fit,
-        condition: newItem.condition,
+        condition: newItem.condition || [],
         temperature: newItem.temperature,
         imageUrl: newItem.imageUrl,
       }
@@ -167,7 +168,7 @@ export default function ClosetPage() {
   const resetUpload = () => {
     setIsUploadOpen(false)
     setUploadStep(1)
-    setNewItem({ temperature: [], condition: "" })
+    setNewItem({ temperature: [], condition: [], color: [] })
     setPreviewUrl(null)
   }
 
@@ -177,6 +178,24 @@ export default function ClosetPage() {
       temperature: prev.temperature?.includes(temp)
         ? prev.temperature.filter((t) => t !== temp)
         : [...(prev.temperature || []), temp],
+    }))
+  }
+
+  const toggleColor = (color: string) => {
+    setNewItem((prev) => ({
+      ...prev,
+      color: prev.color?.includes(color)
+        ? prev.color.filter((c) => c !== color)
+        : [...(prev.color || []), color],
+    }))
+  }
+
+  const toggleCondition = (condition: string) => {
+    setNewItem((prev) => ({
+      ...prev,
+      condition: prev.condition?.includes(condition)
+        ? prev.condition.filter((c) => c !== condition)
+        : [...(prev.condition || []), condition],
     }))
   }
 
