@@ -74,12 +74,13 @@ const colorPreferences = [
 ]
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState<Settings>(() => getSettings())
+  const [settings, setSettings] = useState<Settings>({ units: "fahrenheit", stylePreference: [], colorPreference: "" })
   const [clothes, setClothes] = useState<ClothingItem[]>([])
   const [savedOutfits, setSavedOutfits] = useState<Outfit[]>([])
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
+    setSettings(getSettings())
     setClothes(getStoredClothes())
     setSavedOutfits(getSavedOutfits())
   }, [])
