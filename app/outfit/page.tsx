@@ -1076,6 +1076,16 @@ alts.push(generateOutfit(clothes, weatherCategory, settings.stylePreference))
                       onClick={() => handleSelectAlternate(alt)}
                     >
                       <div className="flex gap-1">
+                        {alt.layer && (
+                          <div className="relative aspect-square flex-1 overflow-hidden rounded-lg bg-background">
+                            <Image
+                              src={alt.layer.imageUrl}
+                              alt={alt.layer.name}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                        )}
                         {alt.top && (
                           <div className="relative aspect-square flex-1 overflow-hidden rounded-lg bg-background">
                             <Image
