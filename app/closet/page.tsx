@@ -58,7 +58,7 @@ const colorOptions = [
 ]
 
 const fitOptions = ["Fitted", "Regular", "Oversized", "Baggy"]
-const shoeConditionOptions = ["Athletic", "Casual", "Formal", "Rainy", "Comfy", "Beach/Pool"]
+const shoeConditionOptions = ["Athletic", "Casual", "Formal", "Rainy", "Comfy", "Beach/Pool", "Hiking", "Running"]
 const conditionOptions = ["Athletic", "Casual", "Formal", "Rainy", "Comfy", "Beach/Pool"]
 const layerConditionOptions = ["Athletic", "Casual", "Formal", "Rainy", "Comfy"]
 const temperatureOptions = [
