@@ -42,6 +42,15 @@ interface WeatherData {
   location: string
 }
 
+interface ForecastDay {
+  date: string
+  dayName: string
+  high: number
+  low: number
+  condition: string
+  precipitation: number
+}
+
 interface Outfit {
   top: ClothingItem | null
   bottom: ClothingItem | null
@@ -78,22 +87,25 @@ function getWeatherCategory(temp: number): string {
   return "hot"
 }
 
-function getWeatherIcon(condition: string) {
+function getWeatherIcon(condition: string, size: "sm" | "md" = "md") {
+  const sizeClass = size === "sm" ? "h-5 w-5" : "h-8 w-8"
   switch (condition.toLowerCase()) {
     case "sunny":
     case "clear":
-      return <Sun className="h-8 w-8 text-yellow-500" />
+      return <Sun className={`${sizeClass} text-yellow-500`} />
     case "cloudy":
     case "overcast":
-      return <Cloud className="h-8 w-8 text-gray-400" />
+      return <Cloud className={`${sizeClass} text-gray-400`} />
     case "rain":
     case "rainy":
-      return <CloudRain className="h-8 w-8 text-blue-400" />
+      return <CloudRain className={`${sizeClass} text-blue-400`} />
     case "snow":
     case "snowy":
-      return <Snowflake className="h-8 w-8 text-cyan-300" />
+      return <Snowflake className={`${sizeClass} text-cyan-300`} />
+    case "foggy":
+      return <Cloud className={`${sizeClass} text-gray-300`} />
     default:
-      return <Sun className="h-8 w-8 text-yellow-500" />
+      return <Sun className={`${sizeClass} text-yellow-500`} />
   }
 }
 
@@ -131,6 +143,7 @@ function generateOutfit(clothes: ClothingItem[], weatherCategory: string): Outfi
 export default function OutfitPage() {
   const [clothes, setClothes] = useState<ClothingItem[]>([])
   const [weather, setWeather] = useState<WeatherData | null>(null)
+  const [forecast, setForecast] = useState<ForecastDay[]>([])
   const [outfit, setOutfit] = useState<Outfit | null>(null)
   const [alternateOutfits, setAlternateOutfits] = useState<Outfit[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -154,6 +167,13 @@ export default function OutfitPage() {
     77: "Snowy", 80: "Rainy", 81: "Rainy", 82: "Rainy", 85: "Snowy", 86: "Snowy",
   }
 
+  const getDayName = (dateString: string, index: number): string => {
+    if (index === 0) return "Today"
+    if (index === 1) return "Tomorrow"
+    const date = new Date(dateString)
+    return date.toLocaleDateString("en-US", { weekday: "short" })
+  }
+
   const fetchWeatherByCoords = async (latitude: number, longitude: number, cityName?: string) => {
     setIsLoading(true)
     setLocationError(null)
@@ -162,10 +182,10 @@ export default function OutfitPage() {
     setSearchResults([])
 
     try {
-      let city = cityName || "Your Location"
+      const city = cityName || "Your Location"
 
       const weatherResponse = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&temperature_unit=fahrenheit`
+        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_sum&temperature_unit=fahrenheit&precipitation_unit=inch&forecast_days=10&timezone=auto`
       )
       
       if (!weatherResponse.ok) {
@@ -181,6 +201,17 @@ export default function OutfitPage() {
         windSpeed: Math.round(weatherData.current.wind_speed_10m),
         location: city,
       })
+
+      // Parse 10-day forecast
+      const forecastDays: ForecastDay[] = weatherData.daily.time.map((date: string, index: number) => ({
+        date,
+        dayName: getDayName(date, index),
+        high: Math.round(weatherData.daily.temperature_2m_max[index]),
+        low: Math.round(weatherData.daily.temperature_2m_min[index]),
+        condition: weatherCodes[weatherData.daily.weather_code[index]] || "Clear",
+        precipitation: weatherData.daily.precipitation_sum[index],
+      }))
+      setForecast(forecastDays)
     } catch {
       setLocationError("Unable to fetch weather data. Please try again.")
     } finally {
@@ -402,6 +433,44 @@ export default function OutfitPage() {
                 <Wind className="h-4 w-4" />
                 <span>{weather.windSpeed} mph wind</span>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* 10-Day Forecast */}
+        {forecast.length > 0 && (
+          <div className="mb-8 rounded-2xl bg-secondary p-6">
+            <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
+              <ThermometerSun className="h-5 w-5" />
+              10-Day Forecast
+            </h3>
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {forecast.map((day, index) => (
+                <div
+                  key={day.date}
+                  className={`flex min-w-[90px] flex-col items-center rounded-xl p-3 ${
+                    index === 0 ? "bg-primary/10 ring-2 ring-primary" : "bg-background"
+                  }`}
+                >
+                  <span className={`text-sm font-medium ${index === 0 ? "text-primary" : ""}`}>
+                    {day.dayName}
+                  </span>
+                  <div className="my-2">
+                    {getWeatherIcon(day.condition, "sm")}
+                  </div>
+                  <div className="flex items-center gap-1 text-sm">
+                    <span className="font-semibold">{day.high}°</span>
+                    <span className="text-muted-foreground">{day.low}°</span>
+                  </div>
+                  {day.precipitation > 0 && (
+                    <div className="mt-1 flex items-center gap-1 text-xs text-blue-500">
+                      <Droplets className="h-3 w-3" />
+                      <span>{day.precipitation.toFixed(2)}"</span>
+                    </div>
+                  )}
+                  <span className="mt-1 text-xs text-muted-foreground">{day.condition}</span>
+                </div>
+              ))}
             </div>
           </div>
         )}
