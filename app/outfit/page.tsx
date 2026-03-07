@@ -401,6 +401,29 @@ export default function OutfitPage() {
     }, 1500)
   }
 
+  const handleGenerateOutfitForDay = (day: ForecastDay) => {
+    if (clothes.length === 0) return
+    
+    setIsGenerating(true)
+    setIsSaved(false)
+    setSelectedDay(null)
+    
+    setTimeout(() => {
+      const avgTemp = (day.high + day.low) / 2
+      const weatherCategory = getWeatherCategory(avgTemp)
+      const mainOutfit = generateOutfit(clothes, weatherCategory)
+      setOutfit(mainOutfit)
+
+      // Generate alternate outfits
+      const alts: Outfit[] = []
+      for (let i = 0; i < 3; i++) {
+        alts.push(generateOutfit(clothes, weatherCategory))
+      }
+      setAlternateOutfits(alts)
+      setIsGenerating(false)
+    }, 1500)
+  }
+
   const handleSaveOutfit = () => {
     if (outfit) {
       saveOutfit(outfit)
@@ -722,8 +745,25 @@ export default function OutfitPage() {
                 )
               })()}
 
-              <div className="mt-6 flex justify-end">
-                <Button onClick={() => setSelectedDay(null)} className="rounded-full">
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-between">
+                <Button 
+                  onClick={() => handleGenerateOutfitForDay(selectedDay)}
+                  disabled={clothes.length === 0 || isGenerating}
+                  className="rounded-full bg-black text-white hover:bg-black/90"
+                >
+                  {isGenerating ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Make an outfit for this day
+                    </>
+                  )}
+                </Button>
+                <Button onClick={() => setSelectedDay(null)} variant="outline" className="rounded-full">
                   Close
                 </Button>
               </div>
