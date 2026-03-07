@@ -274,22 +274,6 @@ export default function SettingsPage() {
             </div>
           </section>
 
-          {/* Save Button */}
-          <Button 
-            className="w-full rounded-full" 
-            size="lg"
-            onClick={handleSaveSettings}
-          >
-            {saved ? (
-              <>
-                <Check className="mr-2 h-4 w-4" />
-                Saved!
-              </>
-            ) : (
-              "Save Settings"
-            )}
-          </Button>
-
           {/* Danger Zone */}
           <section className="rounded-2xl border border-destructive/20 bg-destructive/5 p-6">
             <h2 className="mb-4 text-lg font-semibold text-destructive">Danger Zone</h2>
