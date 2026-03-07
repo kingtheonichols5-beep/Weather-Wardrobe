@@ -382,64 +382,76 @@ export function WeatherOutfit() {
                   Share your location and we will recommend the perfect outfit based on your local weather conditions.
                 </p>
 
-                <div className="mt-10 flex flex-col items-center gap-4">
+                <div className="mt-10 flex flex-col items-center gap-6">
                   <Button
                     onClick={getLocation}
                     size="lg"
                     className="bg-iris px-8 py-6 text-lg hover:bg-iris/90"
                   >
                     <Navigation className="mr-2 h-5 w-5" />
-                    Use My Location
+                    Enable Location
                   </Button>
 
-                  <div className="flex items-center gap-3 text-muted-foreground">
-                    <div className="h-px w-12 bg-border" />
-                    <span className="text-sm">or</span>
-                    <div className="h-px w-12 bg-border" />
-                  </div>
+                  <button
+                    onClick={() => setShowSearch(!showSearch)}
+                    className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <Search className="h-4 w-4" />
+                    <span>Or select a different location</span>
+                  </button>
 
-                  <div ref={searchRef} className="relative w-full max-w-md">
-                    <div className="relative">
-                      <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        placeholder="Search for a city..."
-                        value={searchQuery}
-                        onChange={(e) => handleSearchInput(e.target.value)}
-                        onFocus={() => setShowSearch(true)}
-                        className="h-14 rounded-full border-border bg-surface pl-12 pr-4 text-lg"
-                      />
-                      {isSearching && (
-                        <Loader2 className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-muted-foreground" />
-                      )}
-                    </div>
+                  <AnimatePresence>
+                    {showSearch && (
+                      <motion.div
+                        ref={searchRef}
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="relative w-full max-w-md overflow-hidden"
+                      >
+                        <div className="relative">
+                          <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                          <Input
+                            placeholder="Search for a city..."
+                            value={searchQuery}
+                            onChange={(e) => handleSearchInput(e.target.value)}
+                            className="h-14 rounded-full border-border bg-surface pl-12 pr-4 text-lg"
+                            autoFocus
+                          />
+                          {isSearching && (
+                            <Loader2 className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-muted-foreground" />
+                          )}
+                        </div>
 
-                    <AnimatePresence>
-                      {showSearch && searchResults.length > 0 && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          className="absolute left-0 right-0 top-full z-10 mt-2 overflow-hidden rounded-2xl border border-border bg-surface shadow-lg"
-                        >
-                          {searchResults.map((result, index) => (
-                            <button
-                              key={`${result.lat}-${result.lon}-${index}`}
-                              className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-background"
-                              onClick={() => selectLocation(result)}
+                        <AnimatePresence>
+                          {searchResults.length > 0 && (
+                            <motion.div
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -10 }}
+                              className="absolute left-0 right-0 top-full z-10 mt-2 overflow-hidden rounded-2xl border border-border bg-surface shadow-lg"
                             >
-                              <MapPin className="h-4 w-4 text-muted-foreground" />
-                              <div>
-                                <p className="font-medium text-foreground">{result.name}</p>
-                                <p className="text-sm text-muted-foreground">
-                                  {result.state ? `${result.state}, ` : ""}{result.country}
-                                </p>
-                              </div>
-                            </button>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
+                              {searchResults.map((result, index) => (
+                                <button
+                                  key={`${result.lat}-${result.lon}-${index}`}
+                                  className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-background"
+                                  onClick={() => selectLocation(result)}
+                                >
+                                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                                  <div>
+                                    <p className="font-medium text-foreground">{result.name}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                      {result.state ? `${result.state}, ` : ""}{result.country}
+                                    </p>
+                                  </div>
+                                </button>
+                              ))}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {error && (
