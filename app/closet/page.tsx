@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -205,6 +206,10 @@ export default function ClosetPage() {
                   {uploadStep === 1 && "Upload Photo"}
                   {uploadStep === 2 && "Clothing Details"}
                 </DialogTitle>
+                <DialogDescription className="sr-only">
+                  {uploadStep === 1 && "Upload a photo of your clothing item"}
+                  {uploadStep === 2 && "Enter details about your clothing item"}
+                </DialogDescription>
               </DialogHeader>
 
               {uploadStep === 1 && (
