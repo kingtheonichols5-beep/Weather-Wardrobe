@@ -70,9 +70,9 @@ const colorOptions = [
 ]
 
 const fitOptions = ["Fitted", "Regular", "Oversized", "Baggy"]
-const shoeConditionOptions = ["Athletic", "Casual", "Formal", "Rainy", "Comfy", "Beach/Pool", "Hiking", "Running"]
-const conditionOptions = ["Athletic", "Casual", "Formal", "Rainy", "Comfy", "Beach/Pool"]
-const layerConditionOptions = ["Athletic", "Casual", "Formal", "Rainy", "Comfy"]
+const shoeConditionOptions = ["Athletic", "Casual", "Formal", "Rainy", "Comfy", "Beach/Pool", "Streetwear", "Hiking", "Running"]
+const conditionOptions = ["Athletic", "Casual", "Formal", "Rainy", "Comfy", "Beach/Pool", "Streetwear"]
+const layerConditionOptions = ["Athletic", "Casual", "Formal", "Rainy", "Comfy", "Streetwear"]
 const temperatureOptions = [
   { value: "cold", label: "Cold" },
   { value: "mild", label: "Mild" },

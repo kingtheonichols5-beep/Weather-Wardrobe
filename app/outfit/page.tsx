@@ -264,10 +264,10 @@ function getStyleMatchScore(item: ClothingItem, stylePreferences: string[]): num
         // Prefer neutral/simple pieces - basic types score higher
         if (itemType.includes("t-shirt") || itemType.includes("jeans") || itemType.includes("chinos")) score += 1
         break
-      case "bohemian":
-        if (itemFit === "oversized" || itemFit === "regular") score += 1
-        if (itemConditions.includes("comfy") || itemConditions.includes("casual")) score += 1
-        if (itemType.includes("flowy") || itemType.includes("maxi") || itemType.includes("cardigan")) score += 2
+      case "rainy":
+        if (itemConditions.includes("rainy")) score += 3
+        if (itemType.includes("rain") || itemType.includes("waterproof") || itemType.includes("windbreaker")) score += 2
+        if (itemType.includes("boots") || itemType.includes("jacket")) score += 1
         break
     }
   }
