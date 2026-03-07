@@ -184,14 +184,22 @@ export default function SettingsPage() {
               <Button
                 variant={settings.units === "fahrenheit" ? "default" : "outline"}
                 className="flex-1 rounded-full"
-                onClick={() => setSettings(prev => ({ ...prev, units: "fahrenheit" }))}
+                onClick={() => {
+                  const updated = { ...settings, units: "fahrenheit" as const }
+                  setSettings(updated)
+                  saveSettings(updated)
+                }}
               >
                 Fahrenheit (°F)
               </Button>
               <Button
                 variant={settings.units === "celsius" ? "default" : "outline"}
                 className="flex-1 rounded-full"
-                onClick={() => setSettings(prev => ({ ...prev, units: "celsius" }))}
+                onClick={() => {
+                  const updated = { ...settings, units: "celsius" as const }
+                  setSettings(updated)
+                  saveSettings(updated)
+                }}
               >
                 Celsius (°C)
               </Button>

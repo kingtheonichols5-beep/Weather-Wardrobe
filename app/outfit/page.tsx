@@ -65,6 +65,37 @@ interface Outfit {
 
 const STORAGE_KEY = "stylist-closet"
 const SAVED_OUTFITS_KEY = "stylist-saved-outfits"
+const SETTINGS_KEY = "stylist-settings"
+
+interface Settings {
+  units: "fahrenheit" | "celsius"
+  stylePreference: string[]
+  colorPreference: string
+}
+
+function getSettings(): Settings {
+  if (typeof window === "undefined") return { units: "fahrenheit", stylePreference: [], colorPreference: "" }
+  const stored = localStorage.getItem(SETTINGS_KEY)
+  return stored ? JSON.parse(stored) : { units: "fahrenheit", stylePreference: [], colorPreference: "" }
+}
+
+function fahrenheitToCelsius(f: number): number {
+  return Math.round((f - 32) * 5 / 9)
+}
+
+function formatTemp(tempF: number, units: "fahrenheit" | "celsius"): string {
+  if (units === "celsius") {
+    return `${fahrenheitToCelsius(tempF)}°C`
+  }
+  return `${tempF}°F`
+}
+
+function formatTempNumber(tempF: number, units: "fahrenheit" | "celsius"): number {
+  if (units === "celsius") {
+    return fahrenheitToCelsius(tempF)
+  }
+  return tempF
+}
 
 function getStoredClothes(): ClothingItem[] {
   if (typeof window === "undefined") return []
@@ -245,9 +276,11 @@ export default function OutfitPage() {
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [selectedDay, setSelectedDay] = useState<ForecastDay | null>(null)
   const [outfitDay, setOutfitDay] = useState<ForecastDay | null>(null)
+  const [settings, setSettings] = useState<Settings>({ units: "fahrenheit", stylePreference: [], colorPreference: "" })
 
   useEffect(() => {
     setClothes(getStoredClothes())
+    setSettings(getSettings())
   }, [])
 
   const weatherCodes: Record<number, string> = {
@@ -533,7 +566,7 @@ export default function OutfitPage() {
                   <span>{weather.location}</span>
                 </div>
                 <div className="mt-2 flex items-end gap-2">
-                  <span className="text-5xl font-bold">{weather.temperature}°F</span>
+                  <span className="text-5xl font-bold">{formatTemp(weather.temperature, settings.units)}</span>
                   <span className="mb-2 text-xl text-white/80">{weather.condition}</span>
                 </div>
               </div>
@@ -576,8 +609,8 @@ export default function OutfitPage() {
                     {getWeatherIcon(day.condition, "sm")}
                   </div>
                   <div className="flex items-center gap-1 text-sm">
-                    <span className="font-semibold">{day.high}°</span>
-                    <span className="text-muted-foreground">{day.low}°</span>
+                    <span className="font-semibold">{formatTempNumber(day.high, settings.units)}°</span>
+                    <span className="text-muted-foreground">{formatTempNumber(day.low, settings.units)}°</span>
                   </div>
                   {day.precipitation > 0 && (
                     <div className="mt-1 flex items-center gap-1 text-xs text-blue-500">
@@ -626,11 +659,11 @@ export default function OutfitPage() {
                     <div className="mt-3 flex items-end gap-4">
                       <div>
                         <span className="text-sm text-white/70">High</span>
-                        <p className="text-3xl font-bold">{selectedDay.high}°F</p>
+                        <p className="text-3xl font-bold">{formatTemp(selectedDay.high, settings.units)}</p>
                       </div>
                       <div>
                         <span className="text-sm text-white/70">Low</span>
-                        <p className="text-3xl font-bold">{selectedDay.low}°F</p>
+                        <p className="text-3xl font-bold">{formatTemp(selectedDay.low, settings.units)}</p>
                       </div>
                     </div>
                   </div>
@@ -833,8 +866,8 @@ export default function OutfitPage() {
             <div className="text-center">
               <p className="text-lg text-muted-foreground">
                 {outfitDay 
-                    ? `${outfitDay.dayName} will be ${outfitDay.high}°F / ${outfitDay.low}°F and ${outfitDay.condition.toLowerCase()}`
-                    : `Today is ${weather?.temperature}°F and ${weather?.condition.toLowerCase()}`}
+                    ? `${outfitDay.dayName} will be ${formatTemp(outfitDay.high, settings.units)} / ${formatTemp(outfitDay.low, settings.units)} and ${outfitDay.condition.toLowerCase()}`
+                    : `Today is ${weather ? formatTemp(weather.temperature, settings.units) : ""} and ${weather?.condition.toLowerCase()}`}
               </p>
             </div>
 
