@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Plus, Upload, X, Shirt, Sparkles } from "lucide-react"
+import { Plus, Upload, X, Shirt, Sparkles, Heart, Trash2 } from "lucide-react"
 
 interface ClothingItem {
   id: string
@@ -33,6 +33,15 @@ interface ClothingItem {
   condition: string[]
   temperature: string[]
   imageUrl: string
+}
+
+interface Outfit {
+  layer: ClothingItem | null
+  top: ClothingItem | null
+  bottom: ClothingItem | null
+  shoes: ClothingItem | null
+  score: number
+  explanation: string
 }
 
 const categoryTypes = {
@@ -71,6 +80,7 @@ const temperatureOptions = [
 ]
 
 const STORAGE_KEY = "stylist-closet"
+const SAVED_OUTFITS_KEY = "stylist-saved-outfits"
 
 function getStoredClothes(): ClothingItem[] {
   if (typeof window === "undefined") return []
@@ -82,12 +92,26 @@ function saveClothes(clothes: ClothingItem[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(clothes))
 }
 
+function getSavedOutfits(): Outfit[] {
+  if (typeof window === "undefined") return []
+  const stored = localStorage.getItem(SAVED_OUTFITS_KEY)
+  return stored ? JSON.parse(stored) : []
+}
+
+function deleteSavedOutfit(index: number) {
+  const saved = getSavedOutfits()
+  saved.splice(index, 1)
+  localStorage.setItem(SAVED_OUTFITS_KEY, JSON.stringify(saved))
+}
+
 export default function ClosetPage() {
   const [clothes, setClothes] = useState<ClothingItem[]>([])
+  const [savedOutfits, setSavedOutfits] = useState<Outfit[]>([])
   const [isUploadOpen, setIsUploadOpen] = useState(false)
   
   useEffect(() => {
     setClothes(getStoredClothes())
+    setSavedOutfits(getSavedOutfits())
   }, [])
   const [uploadStep, setUploadStep] = useState(1)
   const [newItem, setNewItem] = useState<Partial<ClothingItem>>({
@@ -159,10 +183,15 @@ export default function ClosetPage() {
     }
   }
 
-  const handleDeleteItem = (id: string) => {
-    const updatedClothes = clothes.filter((item) => item.id !== id)
+const handleDeleteItem = (id: string) => {
+    const updatedClothes = clothes.filter((c) => c.id !== id)
     setClothes(updatedClothes)
     saveClothes(updatedClothes)
+  }
+
+  const handleDeleteOutfit = (index: number) => {
+    deleteSavedOutfit(index)
+    setSavedOutfits(getSavedOutfits())
   }
 
   const resetUpload = () => {
@@ -524,6 +553,84 @@ export default function ClosetPage() {
                 </Button>
               </Link>
             </div>
+
+            {/* Saved Outfits Section */}
+            {savedOutfits.length > 0 && (
+              <section className="mt-16 border-t border-border pt-10">
+                <div className="mb-6 flex items-center gap-2">
+                  <Heart className="h-5 w-5 text-primary" />
+                  <h2 className="text-xl font-semibold">Saved Outfits</h2>
+                  <span className="text-muted-foreground">({savedOutfits.length})</span>
+                </div>
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {savedOutfits.map((outfit, index) => (
+                    <div
+                      key={index}
+                      className="group relative overflow-hidden rounded-2xl border border-border bg-card p-4"
+                    >
+                      <button
+                        className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-destructive/10 text-destructive opacity-0 transition-opacity hover:bg-destructive/20 group-hover:opacity-100"
+                        onClick={() => handleDeleteOutfit(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                      <div className="mb-3 flex items-center gap-2">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                          <Heart className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">Outfit {index + 1}</p>
+                          <p className="text-xs text-muted-foreground">Score: {outfit.score}/10</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-4 gap-2">
+                        {outfit.layer && (
+                          <div className="relative aspect-square overflow-hidden rounded-lg bg-secondary">
+                            <Image
+                              src={outfit.layer.imageUrl}
+                              alt={outfit.layer.name}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                        )}
+                        {outfit.top && (
+                          <div className="relative aspect-square overflow-hidden rounded-lg bg-secondary">
+                            <Image
+                              src={outfit.top.imageUrl}
+                              alt={outfit.top.name}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                        )}
+                        {outfit.bottom && (
+                          <div className="relative aspect-square overflow-hidden rounded-lg bg-secondary">
+                            <Image
+                              src={outfit.bottom.imageUrl}
+                              alt={outfit.bottom.name}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                        )}
+                        {outfit.shoes && (
+                          <div className="relative aspect-square overflow-hidden rounded-lg bg-secondary">
+                            <Image
+                              src={outfit.shoes.imageUrl}
+                              alt={outfit.shoes.name}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                        )}
+                      </div>
+                      <p className="mt-3 text-xs text-muted-foreground line-clamp-2">{outfit.explanation}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
         )}
       </main>
