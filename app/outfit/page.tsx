@@ -90,12 +90,13 @@ function getWeatherCategory(temp: number): string {
   return "hot"
 }
 
-function getClothingRecommendations(high: number, low: number, condition: string, precipitation: number): { tops: string[]; bottoms: string[]; shoes: string[]; accessories: string[]; tips: string[] } {
+function getClothingRecommendations(high: number, low: number, condition: string, precipitation: number): { layers: string[]; tops: string[]; bottoms: string[]; shoes: string[]; accessories: string[]; tips: string[] } {
   const avgTemp = (high + low) / 2
   const isRainy = condition.toLowerCase().includes("rain")
   const isSnowy = condition.toLowerCase().includes("snow")
   const isCloudy = condition.toLowerCase().includes("cloud") || condition.toLowerCase().includes("overcast")
   
+  let layers: string[] = []
   let tops: string[] = []
   let bottoms: string[] = []
   let shoes: string[] = []
@@ -104,30 +105,35 @@ function getClothingRecommendations(high: number, low: number, condition: string
   
   // Temperature-based recommendations
   if (avgTemp <= 40) {
-    tops = ["Heavy winter coat", "Thermal layers", "Wool sweater", "Fleece jacket"]
+    layers = ["Heavy winter coat", "Fleece jacket", "Down vest", "Thermal base layer"]
+    tops = ["Wool sweater", "Turtleneck", "Thermal shirt"]
     bottoms = ["Insulated pants", "Thick jeans", "Thermal leggings"]
     shoes = ["Insulated boots", "Warm waterproof boots"]
     accessories = ["Warm beanie", "Thick scarf", "Insulated gloves", "Wool socks"]
     tips.push("Layer up to trap body heat effectively")
   } else if (avgTemp <= 55) {
-    tops = ["Light jacket", "Cardigan", "Long-sleeve shirt", "Hoodie"]
+    layers = ["Light jacket", "Hoodie", "Cardigan", "Denim jacket"]
+    tops = ["Long-sleeve shirt", "Henley", "Light sweater"]
     bottoms = ["Jeans", "Chinos", "Casual pants"]
     shoes = ["Sneakers", "Ankle boots", "Loafers"]
     accessories = ["Light scarf", "Beanie optional"]
     tips.push("Dress in layers you can easily remove if it warms up")
   } else if (avgTemp <= 70) {
-    tops = ["T-shirt", "Light long-sleeve", "Casual button-up", "Light sweater"]
+    layers = ["Light cardigan", "Zip-up hoodie", "Overshirt"]
+    tops = ["T-shirt", "Light long-sleeve", "Casual button-up"]
     bottoms = ["Jeans", "Chinos", "Light pants", "Skirt"]
     shoes = ["Sneakers", "Casual shoes", "Flats"]
     accessories = ["Sunglasses", "Light jacket for evening"]
     tips.push("Perfect weather for comfortable, versatile outfits")
   } else if (avgTemp <= 85) {
+    layers = ["Light linen overshirt", "Thin cardigan (for AC)"]
     tops = ["Light t-shirt", "Tank top", "Linen shirt", "Breathable blouse"]
     bottoms = ["Shorts", "Light pants", "Flowy skirt", "Linen trousers"]
     shoes = ["Sandals", "Breathable sneakers", "Canvas shoes"]
     accessories = ["Sunglasses", "Sun hat", "Light tote bag"]
     tips.push("Opt for breathable, light-colored fabrics")
   } else {
+    layers = ["Optional light cover-up for sun protection"]
     tops = ["Loose tank top", "Light linen shirt", "Moisture-wicking top"]
     bottoms = ["Loose shorts", "Flowy skirt", "Linen pants"]
     shoes = ["Open sandals", "Breathable slides"]
@@ -137,12 +143,14 @@ function getClothingRecommendations(high: number, low: number, condition: string
   
   // Weather condition adjustments
   if (isRainy || precipitation > 0.1) {
+    layers.unshift("Rain jacket", "Waterproof windbreaker")
     shoes = ["Waterproof boots", "Rain boots", "Water-resistant sneakers"]
-    accessories.push("Umbrella", "Rain jacket")
+    accessories.push("Umbrella")
     tips.push(`Expect around ${precipitation.toFixed(2)}" of rain - waterproof layers recommended`)
   }
   
   if (isSnowy) {
+    layers.unshift("Waterproof puffer jacket")
     shoes = ["Insulated snow boots", "Waterproof winter boots"]
     accessories.push("Waterproof gloves", "Warm hat")
     tips.push("Wear waterproof outer layers to stay dry in the snow")
@@ -157,7 +165,7 @@ function getClothingRecommendations(high: number, low: number, condition: string
     accessories.push("Sunscreen")
   }
   
-  return { tops, bottoms, shoes, accessories, tips }
+  return { layers, tops, bottoms, shoes, accessories, tips }
 }
 
 function getWeatherIcon(condition: string, size: "sm" | "md" = "md") {
@@ -613,6 +621,21 @@ export default function OutfitPage() {
                     <h3 className="text-lg font-semibold">What to Wear</h3>
                     
                     <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="rounded-xl bg-secondary p-4">
+                        <h4 className="mb-2 flex items-center gap-2 font-medium">
+                          <span className="text-base">🧥</span>
+                          Layers
+                        </h4>
+                        <ul className="space-y-1 text-sm text-muted-foreground">
+                          {recs.layers.map((item, i) => (
+                            <li key={i} className="flex items-center gap-2">
+                              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
                       <div className="rounded-xl bg-secondary p-4">
                         <h4 className="mb-2 flex items-center gap-2 font-medium">
                           <Shirt className="h-4 w-4" />
