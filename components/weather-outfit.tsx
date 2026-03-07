@@ -382,23 +382,25 @@ export function WeatherOutfit() {
                   Share your location and we will recommend the perfect outfit based on your local weather conditions.
                 </p>
 
-                <div className="mt-10 flex flex-col items-center gap-6">
+                <div className="mt-10 flex flex-col items-center gap-4">
                   <Button
                     onClick={getLocation}
                     size="lg"
                     className="bg-iris px-8 py-6 text-lg hover:bg-iris/90"
                   >
                     <Navigation className="mr-2 h-5 w-5" />
-                    Enable Location
+                    Use My Location
                   </Button>
 
-                  <button
+                  <Button
                     onClick={() => setShowSearch(!showSearch)}
-                    className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    size="lg"
+                    variant="outline"
+                    className="px-8 py-6 text-lg"
                   >
-                    <Search className="h-4 w-4" />
-                    <span>Or select a different location</span>
-                  </button>
+                    <Search className="mr-2 h-5 w-5" />
+                    Select a Location
+                  </Button>
 
                   <AnimatePresence>
                     {showSearch && (
