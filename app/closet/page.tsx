@@ -136,8 +136,8 @@ export default function ClosetPage() {
     const isShoes = newItem.category === "shoes"
     const isAccessories = newItem.category === "accessories"
     const hasBaseFields = newItem.name && newItem.category && newItem.type && newItem.color && newItem.temperature?.length && newItem.imageUrl
-    const hasRequiredFields = isAccessories ? hasBaseFields : (hasBaseFields && newItem.fit)
-    const hasCondition = isShoes || isAccessories || newItem.condition
+    const hasRequiredFields = isAccessories ? (hasBaseFields && newItem.condition) : (hasBaseFields && newItem.fit)
+    const hasCondition = isShoes || newItem.condition
     
     if (hasRequiredFields && hasCondition) {
       const item: ClothingItem = {
@@ -327,7 +327,26 @@ export default function ClosetPage() {
                       </div>
                     </div>
 
-{newItem.category === "accessories" ? null : newItem.category === "shoes" ? (
+{newItem.category === "accessories" ? (
+                                      <div>
+                                        <label className="mb-2 block text-sm font-medium">Condition</label>
+                                        <Select
+                                          value={newItem.condition}
+                                          onValueChange={(value) => setNewItem((prev) => ({ ...prev, condition: value }))}
+                                        >
+                                          <SelectTrigger>
+                                            <SelectValue placeholder="Select condition" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {conditionOptions.map((condition) => (
+                                              <SelectItem key={condition} value={condition}>
+                                                {condition}
+                                              </SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                    ) : newItem.category === "shoes" ? (
                                       <div>
                                         <label className="mb-2 block text-sm font-medium">Condition</label>
                                         <Select
@@ -415,7 +434,7 @@ export default function ClosetPage() {
                     <Button
                       className="flex-1"
                       onClick={handleSaveItem}
-                      disabled={!newItem.name || !newItem.category || !newItem.type || !newItem.color || !newItem.temperature?.length || (newItem.category !== "shoes" && newItem.category !== "accessories" && !newItem.fit) || (newItem.category !== "shoes" && newItem.category !== "accessories" && !newItem.condition)}
+                      disabled={!newItem.name || !newItem.category || !newItem.type || !newItem.color || !newItem.temperature?.length || (newItem.category !== "shoes" && newItem.category !== "accessories" && !newItem.fit) || (newItem.category !== "shoes" && !newItem.condition)}
                     >
                       Add to Closet
                     </Button>
