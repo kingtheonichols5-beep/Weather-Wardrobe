@@ -14,9 +14,9 @@ const _instrumentSerif = Instrument_Serif({
 })
 
 export const metadata: Metadata = {
-  title: "Opus – The Editorial Portfolio Platform",
+  title: "Weather Wardrobe – AI Outfit Recommendations",
   description:
-    "A website builder designed for writers, photographers, and architects who need a narrative-driven portfolio.",
+    "Get personalized outfit recommendations based on your local weather conditions. Powered by AI for smart, weather-appropriate styling.",
   generator: "v0.app",
   icons: {
     icon: [
