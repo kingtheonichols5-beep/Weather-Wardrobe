@@ -19,7 +19,10 @@ import {
   Droplets,
   Shirt,
   Search,
-  Loader2
+  Loader2,
+  X,
+  Calendar,
+  Umbrella
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 
@@ -85,6 +88,76 @@ function getWeatherCategory(temp: number): string {
   if (temp <= 60) return "mild"
   if (temp <= 75) return "warm"
   return "hot"
+}
+
+function getClothingRecommendations(high: number, low: number, condition: string, precipitation: number): { tops: string[]; bottoms: string[]; shoes: string[]; accessories: string[]; tips: string[] } {
+  const avgTemp = (high + low) / 2
+  const isRainy = condition.toLowerCase().includes("rain")
+  const isSnowy = condition.toLowerCase().includes("snow")
+  const isCloudy = condition.toLowerCase().includes("cloud") || condition.toLowerCase().includes("overcast")
+  
+  let tops: string[] = []
+  let bottoms: string[] = []
+  let shoes: string[] = []
+  let accessories: string[] = []
+  let tips: string[] = []
+  
+  // Temperature-based recommendations
+  if (avgTemp <= 40) {
+    tops = ["Heavy winter coat", "Thermal layers", "Wool sweater", "Fleece jacket"]
+    bottoms = ["Insulated pants", "Thick jeans", "Thermal leggings"]
+    shoes = ["Insulated boots", "Warm waterproof boots"]
+    accessories = ["Warm beanie", "Thick scarf", "Insulated gloves", "Wool socks"]
+    tips.push("Layer up to trap body heat effectively")
+  } else if (avgTemp <= 55) {
+    tops = ["Light jacket", "Cardigan", "Long-sleeve shirt", "Hoodie"]
+    bottoms = ["Jeans", "Chinos", "Casual pants"]
+    shoes = ["Sneakers", "Ankle boots", "Loafers"]
+    accessories = ["Light scarf", "Beanie optional"]
+    tips.push("Dress in layers you can easily remove if it warms up")
+  } else if (avgTemp <= 70) {
+    tops = ["T-shirt", "Light long-sleeve", "Casual button-up", "Light sweater"]
+    bottoms = ["Jeans", "Chinos", "Light pants", "Skirt"]
+    shoes = ["Sneakers", "Casual shoes", "Flats"]
+    accessories = ["Sunglasses", "Light jacket for evening"]
+    tips.push("Perfect weather for comfortable, versatile outfits")
+  } else if (avgTemp <= 85) {
+    tops = ["Light t-shirt", "Tank top", "Linen shirt", "Breathable blouse"]
+    bottoms = ["Shorts", "Light pants", "Flowy skirt", "Linen trousers"]
+    shoes = ["Sandals", "Breathable sneakers", "Canvas shoes"]
+    accessories = ["Sunglasses", "Sun hat", "Light tote bag"]
+    tips.push("Opt for breathable, light-colored fabrics")
+  } else {
+    tops = ["Loose tank top", "Light linen shirt", "Moisture-wicking top"]
+    bottoms = ["Loose shorts", "Flowy skirt", "Linen pants"]
+    shoes = ["Open sandals", "Breathable slides"]
+    accessories = ["Wide-brim hat", "Sunglasses", "Portable fan"]
+    tips.push("Stay cool with loose, breathable clothing and stay hydrated")
+  }
+  
+  // Weather condition adjustments
+  if (isRainy || precipitation > 0.1) {
+    shoes = ["Waterproof boots", "Rain boots", "Water-resistant sneakers"]
+    accessories.push("Umbrella", "Rain jacket")
+    tips.push(`Expect around ${precipitation.toFixed(2)}" of rain - waterproof layers recommended`)
+  }
+  
+  if (isSnowy) {
+    shoes = ["Insulated snow boots", "Waterproof winter boots"]
+    accessories.push("Waterproof gloves", "Warm hat")
+    tips.push("Wear waterproof outer layers to stay dry in the snow")
+  }
+  
+  if (isCloudy && !isRainy) {
+    tips.push("Overcast skies - you might not need sunglasses but keep them handy")
+  }
+  
+  if (condition.toLowerCase() === "clear" || condition.toLowerCase() === "sunny") {
+    tips.push("Sunny day ahead - don't forget sun protection")
+    accessories.push("Sunscreen")
+  }
+  
+  return { tops, bottoms, shoes, accessories, tips }
 }
 
 function getWeatherIcon(condition: string, size: "sm" | "md" = "md") {
@@ -155,6 +228,7 @@ export default function OutfitPage() {
   const [searchResults, setSearchResults] = useState<{ name: string; country: string; state?: string; lat: number; lon: number }[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const [selectedDay, setSelectedDay] = useState<ForecastDay | null>(null)
 
   useEffect(() => {
     setClothes(getStoredClothes())
@@ -444,13 +518,15 @@ export default function OutfitPage() {
               <ThermometerSun className="h-5 w-5" />
               10-Day Forecast
             </h3>
+            <p className="mb-4 text-sm text-muted-foreground">Click on a day for detailed recommendations</p>
             <div className="flex gap-2 overflow-x-auto pb-2">
               {forecast.map((day, index) => (
-                <div
+                <button
                   key={day.date}
-                  className={`flex min-w-[90px] flex-col items-center rounded-xl p-3 ${
-                    index === 0 ? "bg-primary/10 ring-2 ring-primary" : "bg-background"
-                  }`}
+                  onClick={() => setSelectedDay(day)}
+                  className={`flex min-w-[90px] cursor-pointer flex-col items-center rounded-xl p-3 transition-all hover:scale-105 hover:shadow-md ${
+                    index === 0 ? "bg-primary/10 ring-2 ring-primary" : "bg-background hover:bg-background/80"
+                  } ${selectedDay?.date === day.date ? "ring-2 ring-foreground" : ""}`}
                 >
                   <span className={`text-sm font-medium ${index === 0 ? "text-primary" : ""}`}>
                     {day.dayName}
@@ -469,8 +545,158 @@ export default function OutfitPage() {
                     </div>
                   )}
                   <span className="mt-1 text-xs text-muted-foreground">{day.condition}</span>
-                </div>
+                </button>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Selected Day Detail Modal */}
+        {selectedDay && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setSelectedDay(null)}>
+            <div 
+              className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-background p-6 shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-6 flex items-start justify-between">
+                <div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Calendar className="h-4 w-4" />
+                    <span>{new Date(selectedDay.date).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</span>
+                  </div>
+                  <h2 className="mt-1 text-2xl font-bold">{selectedDay.dayName} Weather</h2>
+                </div>
+                <button 
+                  onClick={() => setSelectedDay(null)}
+                  className="rounded-full p-2 hover:bg-secondary"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Weather Overview */}
+              <div className="mb-6 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 p-5 text-white">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-3">
+                      {getWeatherIcon(selectedDay.condition)}
+                      <span className="text-xl font-medium">{selectedDay.condition}</span>
+                    </div>
+                    <div className="mt-3 flex items-end gap-4">
+                      <div>
+                        <span className="text-sm text-white/70">High</span>
+                        <p className="text-3xl font-bold">{selectedDay.high}°F</p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-white/70">Low</span>
+                        <p className="text-3xl font-bold">{selectedDay.low}°F</p>
+                      </div>
+                    </div>
+                  </div>
+                  {selectedDay.precipitation > 0 && (
+                    <div className="text-right">
+                      <div className="flex items-center gap-2">
+                        <Umbrella className="h-5 w-5" />
+                        <span className="text-lg font-medium">Precipitation</span>
+                      </div>
+                      <p className="mt-1 text-2xl font-bold">{selectedDay.precipitation.toFixed(2)}"</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Clothing Recommendations */}
+              {(() => {
+                const recs = getClothingRecommendations(selectedDay.high, selectedDay.low, selectedDay.condition, selectedDay.precipitation)
+                return (
+                  <div className="space-y-5">
+                    <h3 className="text-lg font-semibold">What to Wear</h3>
+                    
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="rounded-xl bg-secondary p-4">
+                        <h4 className="mb-2 flex items-center gap-2 font-medium">
+                          <Shirt className="h-4 w-4" />
+                          Tops
+                        </h4>
+                        <ul className="space-y-1 text-sm text-muted-foreground">
+                          {recs.tops.map((item, i) => (
+                            <li key={i} className="flex items-center gap-2">
+                              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="rounded-xl bg-secondary p-4">
+                        <h4 className="mb-2 flex items-center gap-2 font-medium">
+                          <span className="text-base">👖</span>
+                          Bottoms
+                        </h4>
+                        <ul className="space-y-1 text-sm text-muted-foreground">
+                          {recs.bottoms.map((item, i) => (
+                            <li key={i} className="flex items-center gap-2">
+                              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="rounded-xl bg-secondary p-4">
+                        <h4 className="mb-2 flex items-center gap-2 font-medium">
+                          <span className="text-base">👟</span>
+                          Footwear
+                        </h4>
+                        <ul className="space-y-1 text-sm text-muted-foreground">
+                          {recs.shoes.map((item, i) => (
+                            <li key={i} className="flex items-center gap-2">
+                              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="rounded-xl bg-secondary p-4">
+                        <h4 className="mb-2 flex items-center gap-2 font-medium">
+                          <span className="text-base">🎒</span>
+                          Accessories
+                        </h4>
+                        <ul className="space-y-1 text-sm text-muted-foreground">
+                          {recs.accessories.map((item, i) => (
+                            <li key={i} className="flex items-center gap-2">
+                              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+
+                    {/* Tips */}
+                    {recs.tips.length > 0 && (
+                      <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+                        <h4 className="mb-2 font-medium text-primary">Style Tips</h4>
+                        <ul className="space-y-2 text-sm">
+                          {recs.tips.map((tip, i) => (
+                            <li key={i} className="flex items-start gap-2">
+                              <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                              <span>{tip}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
+
+              <div className="mt-6 flex justify-end">
+                <Button onClick={() => setSelectedDay(null)} className="rounded-full">
+                  Close
+                </Button>
+              </div>
             </div>
           </div>
         )}
