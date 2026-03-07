@@ -27,7 +27,7 @@ interface ClothingItem {
 interface Settings {
   units: "fahrenheit" | "celsius"
   stylePreference: string[]
-  colorPreference: string
+  colorPreference: string[]
 }
 
 interface Outfit {
@@ -49,9 +49,9 @@ function getStoredClothes(): ClothingItem[] {
 }
 
 function getSettings(): Settings {
-  if (typeof window === "undefined") return { units: "fahrenheit", stylePreference: [], colorPreference: "" }
+  if (typeof window === "undefined") return { units: "fahrenheit", stylePreference: [], colorPreference: [] }
   const stored = localStorage.getItem(SETTINGS_KEY)
-  return stored ? JSON.parse(stored) : { units: "fahrenheit", stylePreference: [], colorPreference: "" }
+  return stored ? JSON.parse(stored) : { units: "fahrenheit", stylePreference: [], colorPreference: [] }
 }
 
 function saveSettings(settings: Settings) {
@@ -74,7 +74,7 @@ const colorPreferences = [
 ]
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState<Settings>({ units: "fahrenheit", stylePreference: [], colorPreference: "" })
+  const [settings, setSettings] = useState<Settings>({ units: "fahrenheit", stylePreference: [], colorPreference: [] })
   const [clothes, setClothes] = useState<ClothingItem[]>([])
   const [savedOutfits, setSavedOutfits] = useState<Outfit[]>([])
   const [saved, setSaved] = useState(false)
@@ -97,6 +97,17 @@ export default function SettingsPage() {
       stylePreference: settings.stylePreference.includes(style)
         ? settings.stylePreference.filter(s => s !== style)
         : [...settings.stylePreference, style]
+    }
+    setSettings(updated)
+    saveSettings(updated)
+  }
+
+  const toggleColorPreference = (color: string) => {
+    const updated = {
+      ...settings,
+      colorPreference: settings.colorPreference.includes(color)
+        ? settings.colorPreference.filter(c => c !== color)
+        : [...settings.colorPreference, color]
     }
     setSettings(updated)
     saveSettings(updated)
@@ -242,20 +253,22 @@ export default function SettingsPage() {
               <Palette className="h-5 w-5 text-muted-foreground" />
               <h2 className="text-lg font-semibold">Color Preferences</h2>
             </div>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Select color preferences for outfit recommendations
+            </p>
             
-            <div className="space-y-2">
+            <div className="flex flex-wrap gap-2">
               {colorPreferences.map((pref) => (
                 <button
                   key={pref.value}
-                  className={`flex w-full items-center justify-between rounded-xl p-4 text-left transition-colors ${
-                    settings.colorPreference === pref.value
+                  className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                    settings.colorPreference.includes(pref.value)
                       ? "bg-primary text-primary-foreground"
-                      : "bg-secondary hover:bg-secondary/80"
+                      : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
                   }`}
-                  onClick={() => setSettings(prev => ({ ...prev, colorPreference: pref.value }))}
+                  onClick={() => toggleColorPreference(pref.value)}
                 >
-                  <span className="font-medium">{pref.label}</span>
-                  {settings.colorPreference === pref.value && <Check className="h-5 w-5" />}
+                  {pref.label}
                 </button>
               ))}
             </div>

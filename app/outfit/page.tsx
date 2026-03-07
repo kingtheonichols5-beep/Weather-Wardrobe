@@ -31,8 +31,9 @@ interface ClothingItem {
   name: string
   category: "layer" | "top" | "bottom" | "shoes" | "accessories"
   type: string
-  color: string
+  color: string | string[]
   fit: string
+  condition?: string | string[]
   temperature: string[]
   imageUrl: string
 }
@@ -70,13 +71,13 @@ const SETTINGS_KEY = "stylist-settings"
 interface Settings {
   units: "fahrenheit" | "celsius"
   stylePreference: string[]
-  colorPreference: string
+  colorPreference: string[]
 }
 
 function getSettings(): Settings {
-  if (typeof window === "undefined") return { units: "fahrenheit", stylePreference: [], colorPreference: "" }
+  if (typeof window === "undefined") return { units: "fahrenheit", stylePreference: [], colorPreference: [] }
   const stored = localStorage.getItem(SETTINGS_KEY)
-  return stored ? JSON.parse(stored) : { units: "fahrenheit", stylePreference: [], colorPreference: "" }
+  return stored ? JSON.parse(stored) : { units: "fahrenheit", stylePreference: [], colorPreference: [] }
 }
 
 function fahrenheitToCelsius(f: number): number {
@@ -229,24 +230,28 @@ function getStyleMatchScore(item: ClothingItem, stylePreferences: string[]): num
   let score = 0
   const itemFit = item.fit?.toLowerCase() || ""
   const itemType = item.type?.toLowerCase() || ""
-  const itemCondition = (item as ClothingItem & { condition?: string }).condition?.toLowerCase() || ""
+  // Handle condition as either string or array
+  const rawCondition = item.condition
+  const itemConditions: string[] = Array.isArray(rawCondition) 
+    ? rawCondition.map(c => c.toLowerCase()) 
+    : (rawCondition ? [rawCondition.toLowerCase()] : [])
   
   for (const style of stylePreferences) {
     const styleLower = style.toLowerCase()
     
     switch (styleLower) {
       case "casual":
-        if (itemCondition === "casual") score += 3
+        if (itemConditions.includes("casual")) score += 3
         if (itemFit === "regular" || itemFit === "oversized") score += 1
         if (itemType.includes("t-shirt") || itemType.includes("jeans") || itemType.includes("sneakers")) score += 2
         break
       case "formal":
-        if (itemCondition === "formal") score += 3
+        if (itemConditions.includes("formal")) score += 3
         if (itemFit === "fitted" || itemFit === "regular") score += 1
         if (itemType.includes("dress") || itemType.includes("blazer") || itemType.includes("oxford") || itemType.includes("loafers")) score += 2
         break
       case "athletic":
-        if (itemCondition === "athletic") score += 3
+        if (itemConditions.includes("athletic")) score += 3
         if (itemType.includes("athletic") || itemType.includes("running") || itemType.includes("sport")) score += 2
         break
       case "streetwear":
@@ -260,7 +265,7 @@ function getStyleMatchScore(item: ClothingItem, stylePreferences: string[]): num
         break
       case "bohemian":
         if (itemFit === "oversized" || itemFit === "regular") score += 1
-        if (itemCondition === "comfy" || itemCondition === "casual") score += 1
+        if (itemConditions.includes("comfy") || itemConditions.includes("casual")) score += 1
         if (itemType.includes("flowy") || itemType.includes("maxi") || itemType.includes("cardigan")) score += 2
         break
     }
@@ -384,7 +389,7 @@ export default function OutfitPage() {
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [selectedDay, setSelectedDay] = useState<ForecastDay | null>(null)
   const [outfitDay, setOutfitDay] = useState<ForecastDay | null>(null)
-  const [settings, setSettings] = useState<Settings>({ units: "fahrenheit", stylePreference: [], colorPreference: "" })
+  const [settings, setSettings] = useState<Settings>({ units: "fahrenheit", stylePreference: [], colorPreference: [] })
 
   useEffect(() => {
     setClothes(getStoredClothes())

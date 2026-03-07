@@ -291,7 +291,7 @@ export default function ClosetPage() {
                         <label className="mb-2 block text-sm font-medium">Category</label>
                         <Select
                           value={newItem.category}
-                          onValueChange={(value) => setNewItem((prev) => ({ ...prev, category: value as ClothingItem["category"], type: "", fit: "", condition: "" }))}
+                          onValueChange={(value) => setNewItem((prev) => ({ ...prev, category: value as ClothingItem["category"], type: "", fit: "", condition: [] }))}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Select" />
@@ -329,17 +329,17 @@ export default function ClosetPage() {
                     </div>
 
                     <div>
-                      <label className="mb-2 block text-sm font-medium">Color</label>
+                      <label className="mb-2 block text-sm font-medium">Color (select all that apply)</label>
                       <div className="flex flex-wrap gap-2">
                         {colorOptions.map((color) => (
                           <button
                             key={color.value}
                             type="button"
                             className={`h-8 w-8 rounded-full border-2 transition-transform hover:scale-110 ${
-                              newItem.color === color.value ? "border-primary ring-2 ring-primary/20" : "border-transparent"
+                              newItem.color?.includes(color.value) ? "border-primary ring-2 ring-primary/20" : "border-transparent"
                             }`}
                             style={{ backgroundColor: color.hex }}
-                            onClick={() => setNewItem((prev) => ({ ...prev, color: color.value }))}
+                            onClick={() => toggleColor(color.value)}
                             title={color.label}
                           />
                         ))}
@@ -348,22 +348,23 @@ export default function ClosetPage() {
 
 {newItem.category === "accessories" ? (
                                       <div>
-                                        <label className="mb-2 block text-sm font-medium">Condition</label>
-                                        <Select
-                                          value={newItem.condition}
-                                          onValueChange={(value) => setNewItem((prev) => ({ ...prev, condition: value }))}
-                                        >
-                                          <SelectTrigger>
-                                            <SelectValue placeholder="Select condition" />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            {conditionOptions.map((condition) => (
-                                              <SelectItem key={condition} value={condition}>
-                                                {condition}
-                                              </SelectItem>
-                                            ))}
-                                          </SelectContent>
-                                        </Select>
+                                        <label className="mb-2 block text-sm font-medium">Condition (select all that apply)</label>
+                                        <div className="flex flex-wrap gap-2">
+                                          {conditionOptions.map((condition) => (
+                                            <button
+                                              key={condition}
+                                              type="button"
+                                              className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                                                newItem.condition?.includes(condition)
+                                                  ? "bg-primary text-primary-foreground"
+                                                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                                              }`}
+                                              onClick={() => toggleCondition(condition)}
+                                            >
+                                              {condition}
+                                            </button>
+                                          ))}
+                                        </div>
                                       </div>
                                     ) : newItem.category === "shoes" ? (
                                       <div>
@@ -385,7 +386,7 @@ export default function ClosetPage() {
                                         </Select>
                                       </div>
                                     ) : (
-                                      <div className="grid grid-cols-2 gap-4">
+                                      <div className="space-y-4">
                                         <div>
                                           <label className="mb-2 block text-sm font-medium">Fit</label>
                                           <Select
@@ -405,22 +406,23 @@ export default function ClosetPage() {
                                           </Select>
                                         </div>
                                         <div>
-                                          <label className="mb-2 block text-sm font-medium">Condition</label>
-                                          <Select
-                                            value={newItem.condition}
-                                            onValueChange={(value) => setNewItem((prev) => ({ ...prev, condition: value }))}
-                                          >
-                                            <SelectTrigger>
-                                              <SelectValue placeholder="Select condition" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              {(newItem.category === "layer" ? layerConditionOptions : conditionOptions).map((condition) => (
-                                                <SelectItem key={condition} value={condition}>
-                                                  {condition}
-                                                </SelectItem>
-                                              ))}
-                                            </SelectContent>
-                                          </Select>
+                                          <label className="mb-2 block text-sm font-medium">Condition (select all that apply)</label>
+                                          <div className="flex flex-wrap gap-2">
+                                            {(newItem.category === "layer" ? layerConditionOptions : conditionOptions).map((condition) => (
+                                              <button
+                                                key={condition}
+                                                type="button"
+                                                className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                                                  newItem.condition?.includes(condition)
+                                                    ? "bg-primary text-primary-foreground"
+                                                    : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                                                }`}
+                                                onClick={() => toggleCondition(condition)}
+                                              >
+                                                {condition}
+                                              </button>
+                                            ))}
+                                          </div>
                                         </div>
                                       </div>
                                     )}
@@ -453,7 +455,7 @@ export default function ClosetPage() {
                     <Button
                       className="flex-1"
                       onClick={handleSaveItem}
-                      disabled={!newItem.name || !newItem.category || !newItem.type || !newItem.color || !newItem.temperature?.length || (newItem.category !== "shoes" && newItem.category !== "accessories" && !newItem.fit) || (newItem.category !== "shoes" && !newItem.condition)}
+                      disabled={!newItem.name || !newItem.category || !newItem.type || !newItem.color?.length || !newItem.temperature?.length || (newItem.category !== "shoes" && newItem.category !== "accessories" && !newItem.fit) || (newItem.category !== "shoes" && !newItem.condition?.length)}
                     >
                       Add to Closet
                     </Button>
