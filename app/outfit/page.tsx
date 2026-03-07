@@ -29,7 +29,7 @@ import { Input } from "@/components/ui/input"
 interface ClothingItem {
   id: string
   name: string
-  category: "top" | "bottom" | "shoes"
+  category: "layer" | "top" | "bottom" | "shoes"
   type: string
   color: string
   fit: string
@@ -55,6 +55,7 @@ interface ForecastDay {
 }
 
 interface Outfit {
+  layer: ClothingItem | null
   top: ClothingItem | null
   bottom: ClothingItem | null
   shoes: ClothingItem | null
@@ -191,11 +192,16 @@ function getWeatherIcon(condition: string, size: "sm" | "md" = "md") {
 }
 
 function generateOutfit(clothes: ClothingItem[], weatherCategory: string): Outfit {
+  const layers = clothes.filter(c => c.category === "layer" && c.temperature.includes(weatherCategory))
   const tops = clothes.filter(c => c.category === "top" && c.temperature.includes(weatherCategory))
   const bottoms = clothes.filter(c => c.category === "bottom" && c.temperature.includes(weatherCategory))
   const shoes = clothes.filter(c => c.category === "shoes" && c.temperature.includes(weatherCategory))
 
   // Fallback to any item if no weather-appropriate ones found
+  // Layer is optional - only include if weather calls for it (cold or mild)
+  const needsLayer = weatherCategory === "cold" || weatherCategory === "mild"
+  const layer = needsLayer && layers.length > 0 ? layers[Math.floor(Math.random() * layers.length)] : 
+                needsLayer ? clothes.find(c => c.category === "layer") || null : null
   const top = tops.length > 0 ? tops[Math.floor(Math.random() * tops.length)] : 
               clothes.find(c => c.category === "top") || null
   const bottom = bottoms.length > 0 ? bottoms[Math.floor(Math.random() * bottoms.length)] : 
@@ -213,6 +219,7 @@ function generateOutfit(clothes: ClothingItem[], weatherCategory: string): Outfi
   ]
 
   return {
+    layer,
     top,
     bottom,
     shoes: shoe,
@@ -782,7 +789,22 @@ export default function OutfitPage() {
             </div>
 
             {/* Main Outfit Display */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className={`grid gap-4 ${outfit.layer ? "grid-cols-4" : "grid-cols-3"}`}>
+              {outfit.layer && (
+                <div className="flex flex-col items-center">
+                  <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-secondary ring-2 ring-primary/20">
+                    <Image
+                      src={outfit.layer.imageUrl}
+                      alt={outfit.layer.name}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <p className="mt-2 text-center text-sm font-medium">{outfit.layer.name}</p>
+                  <p className="text-xs text-muted-foreground">{outfit.layer.type}</p>
+                  <span className="mt-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">Layer</span>
+                </div>
+              )}
               {outfit.top && (
                 <div className="flex flex-col items-center">
                   <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-secondary">

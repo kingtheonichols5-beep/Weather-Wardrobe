@@ -25,7 +25,7 @@ import { Plus, Upload, X, Shirt, Sparkles } from "lucide-react"
 interface ClothingItem {
   id: string
   name: string
-  category: "top" | "bottom" | "shoes"
+  category: "layer" | "top" | "bottom" | "shoes"
   type: string
   color: string
   fit: string
@@ -34,7 +34,8 @@ interface ClothingItem {
 }
 
 const categoryTypes = {
-  top: ["T-Shirt", "Tank Top", "Hoodie", "Sweater", "Flannel", "Button-Up", "Polo", "Jacket"],
+  layer: ["Hoodie", "Jacket", "Cardigan", "Blazer", "Coat", "Vest", "Windbreaker", "Fleece", "Denim Jacket", "Puffer"],
+  top: ["T-Shirt", "Tank Top", "Sweater", "Flannel", "Button-Up", "Polo", "Long Sleeve", "Blouse", "Henley"],
   bottom: ["Jeans", "Shorts", "Sweatpants", "Joggers", "Chinos", "Skirt", "Dress Pants"],
   shoes: ["Sneakers", "Boots", "Sandals", "Loafers", "Running Shoes", "Dress Shoes"],
 }
@@ -162,6 +163,7 @@ export default function ClosetPage() {
   }
 
   const groupedClothes = {
+    layer: clothes.filter((c) => c.category === "layer"),
     top: clothes.filter((c) => c.category === "top"),
     bottom: clothes.filter((c) => c.category === "bottom"),
     shoes: clothes.filter((c) => c.category === "shoes"),
@@ -253,6 +255,7 @@ export default function ClosetPage() {
                             <SelectValue placeholder="Select" />
                           </SelectTrigger>
                           <SelectContent>
+                            <SelectItem value="layer">Layer</SelectItem>
                             <SelectItem value="top">Top</SelectItem>
                             <SelectItem value="bottom">Bottom</SelectItem>
                             <SelectItem value="shoes">Shoes</SelectItem>
@@ -370,11 +373,11 @@ export default function ClosetPage() {
           </div>
         ) : (
           <div className="space-y-10">
-            {(["top", "bottom", "shoes"] as const).map((category) => (
+            {(["layer", "top", "bottom", "shoes"] as const).map((category) => (
               groupedClothes[category].length > 0 && (
                 <section key={category}>
                   <h2 className="mb-4 text-lg font-semibold capitalize">
-                    {category === "top" ? "Tops" : category === "bottom" ? "Bottoms" : "Shoes"}{" "}
+                    {category === "layer" ? "Layers" : category === "top" ? "Tops" : category === "bottom" ? "Bottoms" : "Shoes"}{" "}
                     <span className="text-muted-foreground">({groupedClothes[category].length})</span>
                   </h2>
                   <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
