@@ -57,6 +57,7 @@ const colorOptions = [
 ]
 
 const fitOptions = ["Fitted", "Regular", "Oversized", "Baggy", "Athletic"]
+const shoeConditionOptions = ["Athletic", "Casual", "Formal", "Rainy", "Comfy", "Beach/Pool"]
 const temperatureOptions = [
   { value: "cold", label: "Cold" },
   { value: "mild", label: "Mild" },
@@ -249,7 +250,7 @@ export default function ClosetPage() {
                         <label className="mb-2 block text-sm font-medium">Category</label>
                         <Select
                           value={newItem.category}
-                          onValueChange={(value) => setNewItem((prev) => ({ ...prev, category: value as ClothingItem["category"], type: "" }))}
+                          onValueChange={(value) => setNewItem((prev) => ({ ...prev, category: value as ClothingItem["category"], type: "", fit: "" }))}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Select" />
@@ -304,20 +305,28 @@ export default function ClosetPage() {
                     </div>
 
                     <div>
-                      <label className="mb-2 block text-sm font-medium">Fit</label>
+                      <label className="mb-2 block text-sm font-medium">
+                        {newItem.category === "shoes" ? "Condition" : "Fit"}
+                      </label>
                       <Select
                         value={newItem.fit}
                         onValueChange={(value) => setNewItem((prev) => ({ ...prev, fit: value }))}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select fit" />
+                          <SelectValue placeholder={newItem.category === "shoes" ? "Select condition" : "Select fit"} />
                         </SelectTrigger>
                         <SelectContent>
-                          {fitOptions.map((fit) => (
-                            <SelectItem key={fit} value={fit}>
-                              {fit}
-                            </SelectItem>
-                          ))}
+                          {newItem.category === "shoes"
+                            ? shoeConditionOptions.map((condition) => (
+                                <SelectItem key={condition} value={condition}>
+                                  {condition}
+                                </SelectItem>
+                              ))
+                            : fitOptions.map((fit) => (
+                                <SelectItem key={fit} value={fit}>
+                                  {fit}
+                                </SelectItem>
+                              ))}
                         </SelectContent>
                       </Select>
                     </div>
