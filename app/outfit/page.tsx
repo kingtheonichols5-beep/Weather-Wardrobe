@@ -643,6 +643,25 @@ export default function OutfitPage() {
                 </div>
               </div>
 
+              {/* Generate Outfit Button */}
+              <Button 
+                onClick={() => handleGenerateOutfitForDay(selectedDay)}
+                disabled={clothes.length === 0 || isGenerating}
+                className="mb-6 w-full rounded-full bg-black text-white hover:bg-black/90"
+              >
+                {isGenerating ? (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Make an outfit for this day
+                  </>
+                )}
+              </Button>
+
               {/* Clothing Recommendations */}
               {(() => {
                 const recs = getClothingRecommendations(selectedDay.high, selectedDay.low, selectedDay.condition, selectedDay.precipitation)
@@ -745,24 +764,7 @@ export default function OutfitPage() {
                 )
               })()}
 
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-between">
-                <Button 
-                  onClick={() => handleGenerateOutfitForDay(selectedDay)}
-                  disabled={clothes.length === 0 || isGenerating}
-                  className="rounded-full bg-black text-white hover:bg-black/90"
-                >
-                  {isGenerating ? (
-                    <>
-                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="mr-2 h-4 w-4" />
-                      Make an outfit for this day
-                    </>
-                  )}
-                </Button>
+              <div className="mt-6 flex justify-end">
                 <Button onClick={() => setSelectedDay(null)} variant="outline" className="rounded-full">
                   Close
                 </Button>
