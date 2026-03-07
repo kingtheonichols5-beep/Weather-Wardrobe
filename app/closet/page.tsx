@@ -29,6 +29,7 @@ interface ClothingItem {
   type: string
   color: string
   fit: string
+  condition?: string
   temperature: string[]
   imageUrl: string
 }
@@ -56,8 +57,10 @@ const colorOptions = [
   { value: "navy", label: "Navy", hex: "#1E3A5F" },
 ]
 
-const fitOptions = ["Fitted", "Regular", "Oversized", "Baggy", "Athletic"]
+const fitOptions = ["Fitted", "Regular", "Oversized", "Baggy"]
 const shoeConditionOptions = ["Athletic", "Casual", "Formal", "Rainy", "Comfy", "Beach/Pool"]
+const conditionOptions = ["Athletic", "Casual", "Formal", "Rainy", "Comfy", "Beach/Pool"]
+const layerConditionOptions = ["Athletic", "Casual", "Formal", "Rainy", "Comfy"]
 const temperatureOptions = [
   { value: "cold", label: "Cold" },
   { value: "mild", label: "Mild" },
@@ -83,6 +86,7 @@ export default function ClosetPage() {
   const [uploadStep, setUploadStep] = useState(1)
   const [newItem, setNewItem] = useState<Partial<ClothingItem>>({
     temperature: [],
+    condition: "",
   })
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [dragActive, setDragActive] = useState(false)
@@ -123,7 +127,11 @@ export default function ClosetPage() {
   }
 
   const handleSaveItem = () => {
-    if (newItem.name && newItem.category && newItem.type && newItem.color && newItem.fit && newItem.temperature?.length && newItem.imageUrl) {
+    const isShoes = newItem.category === "shoes"
+    const hasRequiredFields = newItem.name && newItem.category && newItem.type && newItem.color && newItem.fit && newItem.temperature?.length && newItem.imageUrl
+    const hasCondition = isShoes || newItem.condition
+    
+    if (hasRequiredFields && hasCondition) {
       const item: ClothingItem = {
         id: Date.now().toString(),
         name: newItem.name,
@@ -131,6 +139,7 @@ export default function ClosetPage() {
         type: newItem.type,
         color: newItem.color,
         fit: newItem.fit,
+        condition: newItem.condition,
         temperature: newItem.temperature,
         imageUrl: newItem.imageUrl,
       }
@@ -150,7 +159,7 @@ export default function ClosetPage() {
   const resetUpload = () => {
     setIsUploadOpen(false)
     setUploadStep(1)
-    setNewItem({ temperature: [] })
+    setNewItem({ temperature: [], condition: "" })
     setPreviewUrl(null)
   }
 
@@ -250,7 +259,7 @@ export default function ClosetPage() {
                         <label className="mb-2 block text-sm font-medium">Category</label>
                         <Select
                           value={newItem.category}
-                          onValueChange={(value) => setNewItem((prev) => ({ ...prev, category: value as ClothingItem["category"], type: "", fit: "" }))}
+                          onValueChange={(value) => setNewItem((prev) => ({ ...prev, category: value as ClothingItem["category"], type: "", fit: "", condition: "" }))}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Select" />
@@ -304,32 +313,65 @@ export default function ClosetPage() {
                       </div>
                     </div>
 
-                    <div>
-                      <label className="mb-2 block text-sm font-medium">
-                        {newItem.category === "shoes" ? "Condition" : "Fit"}
-                      </label>
-                      <Select
-                        value={newItem.fit}
-                        onValueChange={(value) => setNewItem((prev) => ({ ...prev, fit: value }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder={newItem.category === "shoes" ? "Select condition" : "Select fit"} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {newItem.category === "shoes"
-                            ? shoeConditionOptions.map((condition) => (
-                                <SelectItem key={condition} value={condition}>
-                                  {condition}
-                                </SelectItem>
-                              ))
-                            : fitOptions.map((fit) => (
+                    {newItem.category === "shoes" ? (
+                      <div>
+                        <label className="mb-2 block text-sm font-medium">Condition</label>
+                        <Select
+                          value={newItem.fit}
+                          onValueChange={(value) => setNewItem((prev) => ({ ...prev, fit: value }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select condition" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {shoeConditionOptions.map((condition) => (
+                              <SelectItem key={condition} value={condition}>
+                                {condition}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="mb-2 block text-sm font-medium">Fit</label>
+                          <Select
+                            value={newItem.fit}
+                            onValueChange={(value) => setNewItem((prev) => ({ ...prev, fit: value }))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select fit" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {fitOptions.map((fit) => (
                                 <SelectItem key={fit} value={fit}>
                                   {fit}
                                 </SelectItem>
                               ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <label className="mb-2 block text-sm font-medium">Condition</label>
+                          <Select
+                            value={newItem.condition}
+                            onValueChange={(value) => setNewItem((prev) => ({ ...prev, condition: value }))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select condition" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {(newItem.category === "layer" ? layerConditionOptions : conditionOptions).map((condition) => (
+                                <SelectItem key={condition} value={condition}>
+                                  {condition}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    )}
 
                     <div>
                       <label className="mb-2 block text-sm font-medium">Best for Weather</label>
@@ -359,7 +401,7 @@ export default function ClosetPage() {
                     <Button
                       className="flex-1"
                       onClick={handleSaveItem}
-                      disabled={!newItem.name || !newItem.category || !newItem.type || !newItem.color || !newItem.fit || !newItem.temperature?.length}
+                      disabled={!newItem.name || !newItem.category || !newItem.type || !newItem.color || !newItem.fit || !newItem.temperature?.length || (newItem.category !== "shoes" && !newItem.condition)}
                     >
                       Add to Closet
                     </Button>
