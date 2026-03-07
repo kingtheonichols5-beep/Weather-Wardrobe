@@ -92,12 +92,14 @@ export default function SettingsPage() {
   }
 
   const toggleStyle = (style: string) => {
-    setSettings(prev => ({
-      ...prev,
-      stylePreference: prev.stylePreference.includes(style)
-        ? prev.stylePreference.filter(s => s !== style)
-        : [...prev.stylePreference, style]
-    }))
+    const updated = {
+      ...settings,
+      stylePreference: settings.stylePreference.includes(style)
+        ? settings.stylePreference.filter(s => s !== style)
+        : [...settings.stylePreference, style]
+    }
+    setSettings(updated)
+    saveSettings(updated)
   }
 
   const handleClearCloset = () => {

@@ -222,32 +222,140 @@ function getWeatherIcon(condition: string, size: "sm" | "md" = "md") {
   }
 }
 
-function generateOutfit(clothes: ClothingItem[], weatherCategory: string): Outfit {
+// Maps style preferences to clothing attributes (fit, type, condition)
+function getStyleMatchScore(item: ClothingItem, stylePreferences: string[]): number {
+  if (stylePreferences.length === 0) return 0
+  
+  let score = 0
+  const itemFit = item.fit?.toLowerCase() || ""
+  const itemType = item.type?.toLowerCase() || ""
+  const itemCondition = (item as ClothingItem & { condition?: string }).condition?.toLowerCase() || ""
+  
+  for (const style of stylePreferences) {
+    const styleLower = style.toLowerCase()
+    
+    switch (styleLower) {
+      case "casual":
+        if (itemCondition === "casual") score += 3
+        if (itemFit === "regular" || itemFit === "oversized") score += 1
+        if (itemType.includes("t-shirt") || itemType.includes("jeans") || itemType.includes("sneakers")) score += 2
+        break
+      case "formal":
+        if (itemCondition === "formal") score += 3
+        if (itemFit === "fitted" || itemFit === "regular") score += 1
+        if (itemType.includes("dress") || itemType.includes("blazer") || itemType.includes("oxford") || itemType.includes("loafers")) score += 2
+        break
+      case "athletic":
+        if (itemCondition === "athletic") score += 3
+        if (itemType.includes("athletic") || itemType.includes("running") || itemType.includes("sport")) score += 2
+        break
+      case "streetwear":
+        if (itemFit === "oversized" || itemFit === "baggy") score += 2
+        if (itemType.includes("hoodie") || itemType.includes("sneakers") || itemType.includes("joggers")) score += 2
+        break
+      case "minimal":
+        if (itemFit === "fitted" || itemFit === "regular") score += 1
+        // Prefer neutral/simple pieces - basic types score higher
+        if (itemType.includes("t-shirt") || itemType.includes("jeans") || itemType.includes("chinos")) score += 1
+        break
+      case "bohemian":
+        if (itemFit === "oversized" || itemFit === "regular") score += 1
+        if (itemCondition === "comfy" || itemCondition === "casual") score += 1
+        if (itemType.includes("flowy") || itemType.includes("maxi") || itemType.includes("cardigan")) score += 2
+        break
+    }
+  }
+  
+  return score
+}
+
+function selectItemWithStylePriority(
+  items: ClothingItem[], 
+  stylePreferences: string[],
+  usedIds: Set<string> = new Set()
+): ClothingItem | null {
+  if (items.length === 0) return null
+  
+  // Filter out already used items
+  const availableItems = items.filter(item => !usedIds.has(item.id))
+  if (availableItems.length === 0) return items[Math.floor(Math.random() * items.length)]
+  
+  if (stylePreferences.length === 0) {
+    // No style preferences - pick randomly
+    return availableItems[Math.floor(Math.random() * availableItems.length)]
+  }
+  
+  // Score each item based on style preferences
+  const scoredItems = availableItems.map(item => ({
+    item,
+    score: getStyleMatchScore(item, stylePreferences)
+  }))
+  
+  // Sort by score descending
+  scoredItems.sort((a, b) => b.score - a.score)
+  
+  // Get items with the highest score
+  const maxScore = scoredItems[0].score
+  const topItems = scoredItems.filter(s => s.score === maxScore)
+  
+  // Pick randomly from top scoring items
+  return topItems[Math.floor(Math.random() * topItems.length)].item
+}
+
+function generateOutfit(clothes: ClothingItem[], weatherCategory: string, stylePreferences: string[] = []): Outfit {
   const layers = clothes.filter(c => c.category === "layer" && c.temperature.includes(weatherCategory))
   const tops = clothes.filter(c => c.category === "top" && c.temperature.includes(weatherCategory))
   const bottoms = clothes.filter(c => c.category === "bottom" && c.temperature.includes(weatherCategory))
   const shoes = clothes.filter(c => c.category === "shoes" && c.temperature.includes(weatherCategory))
 
+  const usedIds = new Set<string>()
+
   // Fallback to any item if no weather-appropriate ones found
   // Layer is optional - only include if weather calls for it (cold or mild)
   const needsLayer = weatherCategory === "cold" || weatherCategory === "mild"
-  const layer = needsLayer && layers.length > 0 ? layers[Math.floor(Math.random() * layers.length)] : 
-                needsLayer ? clothes.find(c => c.category === "layer") || null : null
-  const top = tops.length > 0 ? tops[Math.floor(Math.random() * tops.length)] : 
-              clothes.find(c => c.category === "top") || null
-  const bottom = bottoms.length > 0 ? bottoms[Math.floor(Math.random() * bottoms.length)] : 
-                 clothes.find(c => c.category === "bottom") || null
-  const shoe = shoes.length > 0 ? shoes[Math.floor(Math.random() * shoes.length)] : 
-               clothes.find(c => c.category === "shoes") || null
-
-  const score = Math.floor(Math.random() * 20 + 75) / 10
+  let layer: ClothingItem | null = null
+  if (needsLayer) {
+    layer = layers.length > 0 
+      ? selectItemWithStylePriority(layers, stylePreferences, usedIds) 
+      : clothes.find(c => c.category === "layer") || null
+    if (layer) usedIds.add(layer.id)
+  }
   
-  const explanations = [
-    "Great color coordination and weather-appropriate choices.",
-    "Perfect balance of style and comfort for today's weather.",
-    "A versatile outfit that works well for the current conditions.",
-    "Good combination of pieces that complement each other nicely.",
-  ]
+  const top = tops.length > 0 
+    ? selectItemWithStylePriority(tops, stylePreferences, usedIds) 
+    : clothes.find(c => c.category === "top") || null
+  if (top) usedIds.add(top.id)
+  
+  const bottom = bottoms.length > 0 
+    ? selectItemWithStylePriority(bottoms, stylePreferences, usedIds) 
+    : clothes.find(c => c.category === "bottom") || null
+  if (bottom) usedIds.add(bottom.id)
+  
+  const shoe = shoes.length > 0 
+    ? selectItemWithStylePriority(shoes, stylePreferences, usedIds) 
+    : clothes.find(c => c.category === "shoes") || null
+
+  // Calculate a score based on how well items match style preferences
+  const matchedItems = [layer, top, bottom, shoe].filter(Boolean) as ClothingItem[]
+  const totalStyleScore = matchedItems.reduce((sum, item) => sum + getStyleMatchScore(item, stylePreferences), 0)
+  const baseScore = 7.5 + (Math.random() * 2)
+  const styleBonus = stylePreferences.length > 0 && matchedItems.length > 0 
+    ? Math.min(2, totalStyleScore / matchedItems.length * 0.3) 
+    : 0
+  const score = Math.min(10, Math.round((baseScore + styleBonus) * 10) / 10)
+  
+  const explanations = stylePreferences.length > 0 && totalStyleScore > 0
+    ? [
+        `Great choices that match your ${stylePreferences.join(" & ").toLowerCase()} style preferences.`,
+        `Outfit curated based on your ${stylePreferences[0].toLowerCase()} style preference.`,
+        `This combination reflects your preferred ${stylePreferences.join(", ").toLowerCase()} aesthetic.`,
+      ]
+    : [
+        "Great color coordination and weather-appropriate choices.",
+        "Perfect balance of style and comfort for today's weather.",
+        "A versatile outfit that works well for the current conditions.",
+        "Good combination of pieces that complement each other nicely.",
+      ]
 
   return {
     layer,
@@ -421,19 +529,19 @@ export default function OutfitPage() {
     setIsSaved(false)
     setOutfitDay(null)
     
-    setTimeout(() => {
-      const weatherCategory = getWeatherCategory(weather.temperature)
-      const mainOutfit = generateOutfit(clothes, weatherCategory)
-      setOutfit(mainOutfit)
-
-      // Generate alternate outfits
-      const alts: Outfit[] = []
-      for (let i = 0; i < 3; i++) {
-        alts.push(generateOutfit(clothes, weatherCategory))
-      }
-      setAlternateOutfits(alts)
-      setIsGenerating(false)
-    }, 1500)
+setTimeout(() => {
+  const weatherCategory = getWeatherCategory(weather.temperature)
+const mainOutfit = generateOutfit(clothes, weatherCategory, settings.stylePreference)
+  setOutfit(mainOutfit)
+  
+  // Generate alternate outfits
+  const alts: Outfit[] = []
+  for (let i = 0; i < 3; i++) {
+alts.push(generateOutfit(clothes, weatherCategory, settings.stylePreference))
+  }
+  setAlternateOutfits(alts)
+  setIsGenerating(false)
+  }, 1500)
   }
 
   const handleGenerateOutfitForDay = (day: ForecastDay) => {
@@ -444,20 +552,20 @@ export default function OutfitPage() {
     setSelectedDay(null)
     setOutfitDay(day)
     
-    setTimeout(() => {
-      const avgTemp = (day.high + day.low) / 2
-      const weatherCategory = getWeatherCategory(avgTemp)
-      const mainOutfit = generateOutfit(clothes, weatherCategory)
-      setOutfit(mainOutfit)
-
-      // Generate alternate outfits
-      const alts: Outfit[] = []
-      for (let i = 0; i < 3; i++) {
-        alts.push(generateOutfit(clothes, weatherCategory))
-      }
-      setAlternateOutfits(alts)
-      setIsGenerating(false)
-    }, 1500)
+setTimeout(() => {
+  const avgTemp = (day.high + day.low) / 2
+  const weatherCategory = getWeatherCategory(avgTemp)
+const mainOutfit = generateOutfit(clothes, weatherCategory, settings.stylePreference)
+  setOutfit(mainOutfit)
+  
+  // Generate alternate outfits
+  const alts: Outfit[] = []
+  for (let i = 0; i < 3; i++) {
+alts.push(generateOutfit(clothes, weatherCategory, settings.stylePreference))
+  }
+  setAlternateOutfits(alts)
+  setIsGenerating(false)
+  }, 1500)
   }
 
   const handleSaveOutfit = () => {
