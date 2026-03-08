@@ -247,33 +247,6 @@ export default function SettingsPage() {
             </div>
           </section>
 
-          {/* Color Preferences */}
-          <section className="rounded-2xl border border-border p-6">
-            <div className="mb-4 flex items-center gap-2">
-              <Palette className="h-5 w-5 text-muted-foreground" />
-              <h2 className="text-lg font-semibold">Color Preferences</h2>
-            </div>
-            <p className="mb-4 text-sm text-muted-foreground">
-              Select color preferences for outfit recommendations
-            </p>
-            
-            <div className="flex flex-wrap gap-2">
-              {colorPreferences.map((pref) => (
-                <button
-                  key={pref.value}
-                  className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                    settings.colorPreference.includes(pref.value)
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                  }`}
-                  onClick={() => toggleColorPreference(pref.value)}
-                >
-                  {pref.label}
-                </button>
-              ))}
-            </div>
-          </section>
-
           {/* Danger Zone */}
           <section className="rounded-2xl border border-destructive/20 bg-destructive/5 p-6">
             <h2 className="mb-4 text-lg font-semibold text-destructive">Danger Zone</h2>
