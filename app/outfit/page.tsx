@@ -319,17 +319,34 @@ function selectItemWithStylePriority(
   return topItems[Math.floor(Math.random() * topItems.length)].item
 }
 
+// Helper to check if an item has formal condition
+function isFormalItem(item: ClothingItem | null): boolean {
+  if (!item) return false
+  const conditions = Array.isArray(item.condition) ? item.condition : (item.condition ? [item.condition] : [])
+  return conditions.some(c => c.toLowerCase() === "formal")
+}
+
+// Filter items to only formal or only non-formal based on existing selections
+function filterByFormalMatch(items: ClothingItem[], mustBeFormal: boolean): ClothingItem[] {
+  return items.filter(item => {
+    const conditions = Array.isArray(item.condition) ? item.condition : (item.condition ? [item.condition] : [])
+    const itemIsFormal = conditions.some(c => c.toLowerCase() === "formal")
+    return mustBeFormal ? itemIsFormal : !itemIsFormal
+  })
+}
+
 function generateOutfit(clothes: ClothingItem[], weatherCategory: string, stylePreferences: string[] = [], excludeIds: Set<string> = new Set()): Outfit {
   // Items with "n/a" in temperature match any weather condition
   const matchesWeather = (c: ClothingItem) => c.temperature.includes(weatherCategory) || c.temperature.includes("n/a")
   // Filter out items already used in other outfits
   const availableClothes = clothes.filter(c => !excludeIds.has(c.id))
-  const layers = availableClothes.filter(c => c.category === "layer" && matchesWeather(c))
-  const tops = availableClothes.filter(c => c.category === "top" && matchesWeather(c))
-  const bottoms = availableClothes.filter(c => c.category === "bottom" && matchesWeather(c))
-  const shoes = availableClothes.filter(c => c.category === "shoes" && matchesWeather(c))
+  let layers = availableClothes.filter(c => c.category === "layer" && matchesWeather(c))
+  let tops = availableClothes.filter(c => c.category === "top" && matchesWeather(c))
+  let bottoms = availableClothes.filter(c => c.category === "bottom" && matchesWeather(c))
+  let shoes = availableClothes.filter(c => c.category === "shoes" && matchesWeather(c))
 
   const usedIds = new Set<string>()
+  let isFormalOutfit = false
 
   // Fallback to any item if no weather-appropriate ones found
   // Layer is optional - only include if weather calls for it (cold or mild)
@@ -339,18 +356,45 @@ function generateOutfit(clothes: ClothingItem[], weatherCategory: string, styleP
     layer = layers.length > 0 
       ? selectItemWithStylePriority(layers, stylePreferences, usedIds) 
       : clothes.find(c => c.category === "layer") || null
-    if (layer) usedIds.add(layer.id)
+    if (layer) {
+      usedIds.add(layer.id)
+      if (isFormalItem(layer)) isFormalOutfit = true
+    }
+  }
+  
+  // If we have a formal layer, filter remaining items to formal only
+  if (isFormalOutfit) {
+    tops = filterByFormalMatch(tops, true)
+    bottoms = filterByFormalMatch(bottoms, true)
+    shoes = filterByFormalMatch(shoes, true)
   }
   
   const top = tops.length > 0 
     ? selectItemWithStylePriority(tops, stylePreferences, usedIds) 
     : clothes.find(c => c.category === "top") || null
-  if (top) usedIds.add(top.id)
+  if (top) {
+    usedIds.add(top.id)
+    if (isFormalItem(top)) isFormalOutfit = true
+  }
+  
+  // If top is formal, filter remaining items to formal only
+  if (isFormalOutfit) {
+    bottoms = filterByFormalMatch(bottoms, true)
+    shoes = filterByFormalMatch(shoes, true)
+  }
   
   const bottom = bottoms.length > 0 
     ? selectItemWithStylePriority(bottoms, stylePreferences, usedIds) 
     : clothes.find(c => c.category === "bottom") || null
-  if (bottom) usedIds.add(bottom.id)
+  if (bottom) {
+    usedIds.add(bottom.id)
+    if (isFormalItem(bottom)) isFormalOutfit = true
+  }
+  
+  // If any previous item is formal, shoes must be formal too
+  if (isFormalOutfit) {
+    shoes = filterByFormalMatch(shoes, true)
+  }
   
   const shoe = shoes.length > 0 
     ? selectItemWithStylePriority(shoes, stylePreferences, usedIds) 
