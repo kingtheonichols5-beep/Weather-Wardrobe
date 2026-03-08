@@ -96,18 +96,13 @@ export default function LandingPage() {
       </div>
 
       {/* Navigation */}
-      <header className="relative z-10 mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+      <header className="relative z-10 mx-auto flex h-16 max-w-7xl items-center justify-center px-6">
         <div className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
             <Sparkles className="h-5 w-5 text-primary-foreground" />
           </div>
           <span className="text-xl font-semibold tracking-tight">Stylist</span>
         </div>
-        <Link href="/outfit">
-          <Button variant="outline" className="rounded-full">
-            Sign In
-          </Button>
-        </Link>
       </header>
 
       {/* Hero Section */}
@@ -130,19 +125,12 @@ export default function LandingPage() {
           Get personalized recommendations every day.
         </p>
 
-        <div className="flex flex-col items-center gap-4 sm:flex-row">
-          <Link href="/closet">
-            <Button size="lg" className="h-12 rounded-full px-8 text-base">
-              Get Started
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </Link>
-          <Link href="/outfit">
-            <Button size="lg" variant="outline" className="h-12 rounded-full px-8 text-base">
-              Try Demo
-            </Button>
-          </Link>
-        </div>
+        <Link href="/closet">
+          <Button size="lg" className="h-12 rounded-full px-8 text-base">
+            Get Started
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </Link>
       </section>
 
       {/* Features Section */}
