@@ -340,65 +340,69 @@ function generateOutfit(clothes: ClothingItem[], weatherCategory: string, styleP
   const matchesWeather = (c: ClothingItem) => c.temperature.includes(weatherCategory) || c.temperature.includes("n/a")
   // Filter out items already used in other outfits
   const availableClothes = clothes.filter(c => !excludeIds.has(c.id))
+  
+  // Determine if this should be a formal outfit based on style preferences or available items
+  const formalStyleSelected = stylePreferences.some(s => s.toLowerCase() === "formal")
+  
+  // Check if we have enough formal items to make a complete formal outfit
+  const formalLayers = availableClothes.filter(c => c.category === "layer" && matchesWeather(c) && isFormalItem(c))
+  const formalTops = availableClothes.filter(c => c.category === "top" && matchesWeather(c) && isFormalItem(c))
+  const formalBottoms = availableClothes.filter(c => c.category === "bottom" && matchesWeather(c) && isFormalItem(c))
+  const formalShoes = availableClothes.filter(c => c.category === "shoes" && matchesWeather(c) && isFormalItem(c))
+  
+  // Only make a formal outfit if formal style is selected AND we have formal options for main pieces
+  const makeFormalOutfit = formalStyleSelected && formalTops.length > 0 && formalBottoms.length > 0 && formalShoes.length > 0
+  
+  // Filter all categories based on formal/non-formal decision UPFRONT
   let layers = availableClothes.filter(c => c.category === "layer" && matchesWeather(c))
   let tops = availableClothes.filter(c => c.category === "top" && matchesWeather(c))
   let bottoms = availableClothes.filter(c => c.category === "bottom" && matchesWeather(c))
   let shoes = availableClothes.filter(c => c.category === "shoes" && matchesWeather(c))
+  
+  if (makeFormalOutfit) {
+    // Use only formal items
+    layers = filterByFormalMatch(layers, true)
+    tops = filterByFormalMatch(tops, true)
+    bottoms = filterByFormalMatch(bottoms, true)
+    shoes = filterByFormalMatch(shoes, true)
+  } else {
+    // Use only non-formal items to prevent mixing
+    layers = filterByFormalMatch(layers, false)
+    tops = filterByFormalMatch(tops, false)
+    bottoms = filterByFormalMatch(bottoms, false)
+    shoes = filterByFormalMatch(shoes, false)
+    
+    // Fallback: if filtering leaves us with no options, use all available (non-formal preferred)
+    if (tops.length === 0) tops = availableClothes.filter(c => c.category === "top" && matchesWeather(c) && !isFormalItem(c))
+    if (bottoms.length === 0) bottoms = availableClothes.filter(c => c.category === "bottom" && matchesWeather(c) && !isFormalItem(c))
+    if (shoes.length === 0) shoes = availableClothes.filter(c => c.category === "shoes" && matchesWeather(c) && !isFormalItem(c))
+  }
 
   const usedIds = new Set<string>()
-  let isFormalOutfit = false
 
-  // Fallback to any item if no weather-appropriate ones found
   // Layer is optional - only include if weather calls for it (cold or mild)
   const needsLayer = weatherCategory === "cold" || weatherCategory === "mild"
   let layer: ClothingItem | null = null
   if (needsLayer) {
     layer = layers.length > 0 
       ? selectItemWithStylePriority(layers, stylePreferences, usedIds) 
-      : clothes.find(c => c.category === "layer") || null
-    if (layer) {
-      usedIds.add(layer.id)
-      if (isFormalItem(layer)) isFormalOutfit = true
-    }
-  }
-  
-  // If we have a formal layer, filter remaining items to formal only
-  if (isFormalOutfit) {
-    tops = filterByFormalMatch(tops, true)
-    bottoms = filterByFormalMatch(bottoms, true)
-    shoes = filterByFormalMatch(shoes, true)
+      : null
+    if (layer) usedIds.add(layer.id)
   }
   
   const top = tops.length > 0 
     ? selectItemWithStylePriority(tops, stylePreferences, usedIds) 
-    : clothes.find(c => c.category === "top") || null
-  if (top) {
-    usedIds.add(top.id)
-    if (isFormalItem(top)) isFormalOutfit = true
-  }
-  
-  // If top is formal, filter remaining items to formal only
-  if (isFormalOutfit) {
-    bottoms = filterByFormalMatch(bottoms, true)
-    shoes = filterByFormalMatch(shoes, true)
-  }
+    : null
+  if (top) usedIds.add(top.id)
   
   const bottom = bottoms.length > 0 
     ? selectItemWithStylePriority(bottoms, stylePreferences, usedIds) 
-    : clothes.find(c => c.category === "bottom") || null
-  if (bottom) {
-    usedIds.add(bottom.id)
-    if (isFormalItem(bottom)) isFormalOutfit = true
-  }
-  
-  // If any previous item is formal, shoes must be formal too
-  if (isFormalOutfit) {
-    shoes = filterByFormalMatch(shoes, true)
-  }
+    : null
+  if (bottom) usedIds.add(bottom.id)
   
   const shoe = shoes.length > 0 
     ? selectItemWithStylePriority(shoes, stylePreferences, usedIds) 
-    : clothes.find(c => c.category === "shoes") || null
+    : null
 
   // Calculate accuracy based on weather and style matching
   const matchedItems = [layer, top, bottom, shoe].filter(Boolean) as ClothingItem[]
