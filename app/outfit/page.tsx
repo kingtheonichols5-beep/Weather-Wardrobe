@@ -400,9 +400,22 @@ function generateOutfit(clothes: ClothingItem[], weatherCategory: string, styleP
     : null
   if (bottom) usedIds.add(bottom.id)
   
-  const shoe = shoes.length > 0 
+  // Shoes are required - fallback to any available shoe if filtered list is empty
+  let shoe = shoes.length > 0 
     ? selectItemWithStylePriority(shoes, stylePreferences, usedIds) 
     : null
+  
+  // If no shoe found after filtering, try to find any available shoe
+  if (!shoe) {
+    const anyShoes = availableClothes.filter(c => c.category === "shoes" && matchesWeather(c))
+    shoe = anyShoes.length > 0 ? anyShoes[Math.floor(Math.random() * anyShoes.length)] : null
+  }
+  
+  // Last resort: find any shoe in the entire closet
+  if (!shoe) {
+    const allShoes = clothes.filter(c => c.category === "shoes" && !excludeIds.has(c.id))
+    shoe = allShoes.length > 0 ? allShoes[Math.floor(Math.random() * allShoes.length)] : null
+  }
 
   // Calculate accuracy based on weather and style matching
   const matchedItems = [layer, top, bottom, shoe].filter(Boolean) as ClothingItem[]
