@@ -40,6 +40,7 @@ interface Outfit {
   top: ClothingItem | null
   bottom: ClothingItem | null
   shoes: ClothingItem | null
+  accessory: ClothingItem | null
   score: number
   accuracy: number
   explanation: string
@@ -894,6 +895,16 @@ disabled={!newItem.name || !newItem.category || !newItem.type || !newItem.color?
                             <Image
                               src={outfit.shoes.imageUrl}
                               alt={outfit.shoes.name}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                        )}
+                        {outfit.accessory && (
+                          <div className="relative aspect-square overflow-hidden rounded-lg bg-secondary">
+                            <Image
+                              src={outfit.accessory.imageUrl}
+                              alt={outfit.accessory.name}
                               fill
                               className="object-cover"
                             />

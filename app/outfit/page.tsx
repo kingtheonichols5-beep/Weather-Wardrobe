@@ -60,6 +60,7 @@ interface Outfit {
   top: ClothingItem | null
   bottom: ClothingItem | null
   shoes: ClothingItem | null
+  accessory: ClothingItem | null
   score: number
   accuracy: number
   explanation: string
@@ -326,7 +327,8 @@ function areOutfitsSame(outfit1: Outfit, outfit2: Outfit): boolean {
     getId(outfit1.layer) === getId(outfit2.layer) &&
     getId(outfit1.top) === getId(outfit2.top) &&
     getId(outfit1.bottom) === getId(outfit2.bottom) &&
-    getId(outfit1.shoes) === getId(outfit2.shoes)
+    getId(outfit1.shoes) === getId(outfit2.shoes) &&
+    getId(outfit1.accessory) === getId(outfit2.accessory)
   )
 }
 
@@ -433,8 +435,20 @@ function generateOutfit(clothes: ClothingItem[], weatherCategory: string, styleP
     shoe = allShoes.length > 0 ? allShoes[Math.floor(Math.random() * allShoes.length)] : null
   }
 
+  // Select an accessory (optional)
+  let accessories = availableClothes.filter(c => c.category === "accessories" && matchesWeather(c))
+  if (makeFormalOutfit) {
+    accessories = filterByFormalMatch(accessories, true)
+  } else {
+    const nonFormalAccessories = filterByFormalMatch(accessories, false)
+    if (nonFormalAccessories.length > 0) accessories = nonFormalAccessories
+  }
+  const accessory = accessories.length > 0 
+    ? selectItemWithStylePriority(accessories, stylePreferences, usedIds) 
+    : null
+
   // Calculate accuracy based on weather and style matching
-  const matchedItems = [layer, top, bottom, shoe].filter(Boolean) as ClothingItem[]
+  const matchedItems = [layer, top, bottom, shoe, accessory].filter(Boolean) as ClothingItem[]
   
   // Weather accuracy: percentage of items that match the weather category directly (not just N/A)
   const weatherMatchCount = matchedItems.filter(item => 
@@ -480,6 +494,7 @@ function generateOutfit(clothes: ClothingItem[], weatherCategory: string, styleP
     top,
     bottom,
     shoes: shoe,
+    accessory,
     score,
     accuracy,
     explanation,
@@ -1193,6 +1208,20 @@ setTimeout(() => {
                   <p className="text-xs text-muted-foreground">{outfit.shoes.type}</p>
                 </div>
               )}
+              {outfit.accessory && (
+                <div className="flex flex-col items-center">
+                  <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-secondary">
+                    <Image
+                      src={outfit.accessory.imageUrl}
+                      alt={outfit.accessory.name}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <p className="mt-2 text-center text-sm font-medium">{outfit.accessory.name}</p>
+                  <p className="text-xs text-muted-foreground">{outfit.accessory.type}</p>
+                </div>
+              )}
             </div>
 
 {/* Score & Accuracy */}
@@ -1275,6 +1304,16 @@ setTimeout(() => {
                             <Image
                               src={alt.shoes.imageUrl}
                               alt={alt.shoes.name}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                        )}
+                        {alt.accessory && (
+                          <div className="relative aspect-square flex-1 overflow-hidden rounded-lg bg-background">
+                            <Image
+                              src={alt.accessory.imageUrl}
+                              alt={alt.accessory.name}
                               fill
                               className="object-cover"
                             />
