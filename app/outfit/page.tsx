@@ -636,25 +636,12 @@ setTimeout(() => {
   const weatherCategory = getWeatherCategory(weather.temperature)
   
   const mainOutfit = generateOutfit(clothes, weatherCategory, settings.stylePreference, new Set())
-  // Track main outfit items to try to vary alternates (but allow reuse if needed)
-  const mainOutfitIds = new Set<string>()
-  if (mainOutfit.layer) mainOutfitIds.add(mainOutfit.layer.id)
-  if (mainOutfit.top) mainOutfitIds.add(mainOutfit.top.id)
-  if (mainOutfit.bottom) mainOutfitIds.add(mainOutfit.bottom.id)
-  if (mainOutfit.shoes) mainOutfitIds.add(mainOutfit.shoes.id)
   setOutfit(mainOutfit)
   
-  // Generate 3 alternate outfits - allow item reuse but try to vary from main
+  // Generate 3 alternate outfits - no exclusions, same outfit can appear multiple times
   const alts: Outfit[] = []
   for (let i = 0; i < 3; i++) {
-    // Try to generate with exclusions first, then allow reuse if needed
-    let altOutfit = generateOutfit(clothes, weatherCategory, settings.stylePreference, mainOutfitIds)
-    
-    // If we got an incomplete outfit, try again allowing all items
-    if (!altOutfit.top || !altOutfit.bottom || !altOutfit.shoes) {
-      altOutfit = generateOutfit(clothes, weatherCategory, settings.stylePreference, new Set())
-    }
-    alts.push(altOutfit)
+    alts.push(generateOutfit(clothes, weatherCategory, settings.stylePreference, new Set()))
   }
   setAlternateOutfits(alts)
   setIsGenerating(false)
@@ -674,25 +661,12 @@ setTimeout(() => {
   const weatherCategory = getWeatherCategory(avgTemp)
   
   const mainOutfit = generateOutfit(clothes, weatherCategory, settings.stylePreference, new Set())
-  // Track main outfit items to try to vary alternates (but allow reuse if needed)
-  const mainOutfitIds = new Set<string>()
-  if (mainOutfit.layer) mainOutfitIds.add(mainOutfit.layer.id)
-  if (mainOutfit.top) mainOutfitIds.add(mainOutfit.top.id)
-  if (mainOutfit.bottom) mainOutfitIds.add(mainOutfit.bottom.id)
-  if (mainOutfit.shoes) mainOutfitIds.add(mainOutfit.shoes.id)
   setOutfit(mainOutfit)
   
-  // Generate 3 alternate outfits - allow item reuse but try to vary from main
+  // Generate 3 alternate outfits - no exclusions, same outfit can appear multiple times
   const alts: Outfit[] = []
   for (let i = 0; i < 3; i++) {
-    // Try to generate with exclusions first, then allow reuse if needed
-    let altOutfit = generateOutfit(clothes, weatherCategory, settings.stylePreference, mainOutfitIds)
-    
-    // If we got an incomplete outfit, try again allowing all items
-    if (!altOutfit.top || !altOutfit.bottom || !altOutfit.shoes) {
-      altOutfit = generateOutfit(clothes, weatherCategory, settings.stylePreference, new Set())
-    }
-    alts.push(altOutfit)
+    alts.push(generateOutfit(clothes, weatherCategory, settings.stylePreference, new Set()))
   }
   setAlternateOutfits(alts)
   setIsGenerating(false)
