@@ -308,13 +308,15 @@ function selectItemWithStylePriority(
   return topItems[Math.floor(Math.random() * topItems.length)].item
 }
 
-function generateOutfit(clothes: ClothingItem[], weatherCategory: string, stylePreferences: string[] = []): Outfit {
+function generateOutfit(clothes: ClothingItem[], weatherCategory: string, stylePreferences: string[] = [], excludeIds: Set<string> = new Set()): Outfit {
   // Items with "n/a" in temperature match any weather condition
   const matchesWeather = (c: ClothingItem) => c.temperature.includes(weatherCategory) || c.temperature.includes("n/a")
-  const layers = clothes.filter(c => c.category === "layer" && matchesWeather(c))
-  const tops = clothes.filter(c => c.category === "top" && matchesWeather(c))
-  const bottoms = clothes.filter(c => c.category === "bottom" && matchesWeather(c))
-  const shoes = clothes.filter(c => c.category === "shoes" && matchesWeather(c))
+  // Filter out items already used in other outfits
+  const availableClothes = clothes.filter(c => !excludeIds.has(c.id))
+  const layers = availableClothes.filter(c => c.category === "layer" && matchesWeather(c))
+  const tops = availableClothes.filter(c => c.category === "top" && matchesWeather(c))
+  const bottoms = availableClothes.filter(c => c.category === "bottom" && matchesWeather(c))
+  const shoes = availableClothes.filter(c => c.category === "shoes" && matchesWeather(c))
 
   const usedIds = new Set<string>()
 
@@ -560,13 +562,26 @@ export default function OutfitPage() {
     
 setTimeout(() => {
   const weatherCategory = getWeatherCategory(weather.temperature)
-const mainOutfit = generateOutfit(clothes, weatherCategory, settings.stylePreference)
+  const usedItemIds = new Set<string>()
+  
+  const mainOutfit = generateOutfit(clothes, weatherCategory, settings.stylePreference, usedItemIds)
+  // Track items used in main outfit
+  if (mainOutfit.layer) usedItemIds.add(mainOutfit.layer.id)
+  if (mainOutfit.top) usedItemIds.add(mainOutfit.top.id)
+  if (mainOutfit.bottom) usedItemIds.add(mainOutfit.bottom.id)
+  if (mainOutfit.shoes) usedItemIds.add(mainOutfit.shoes.id)
   setOutfit(mainOutfit)
   
-  // Generate alternate outfits
+  // Generate alternate outfits with different items
   const alts: Outfit[] = []
   for (let i = 0; i < 3; i++) {
-alts.push(generateOutfit(clothes, weatherCategory, settings.stylePreference))
+    const altOutfit = generateOutfit(clothes, weatherCategory, settings.stylePreference, usedItemIds)
+    // Track items used in this alternate outfit for subsequent alternates
+    if (altOutfit.layer) usedItemIds.add(altOutfit.layer.id)
+    if (altOutfit.top) usedItemIds.add(altOutfit.top.id)
+    if (altOutfit.bottom) usedItemIds.add(altOutfit.bottom.id)
+    if (altOutfit.shoes) usedItemIds.add(altOutfit.shoes.id)
+    alts.push(altOutfit)
   }
   setAlternateOutfits(alts)
   setIsGenerating(false)
@@ -584,13 +599,26 @@ alts.push(generateOutfit(clothes, weatherCategory, settings.stylePreference))
 setTimeout(() => {
   const avgTemp = (day.high + day.low) / 2
   const weatherCategory = getWeatherCategory(avgTemp)
-const mainOutfit = generateOutfit(clothes, weatherCategory, settings.stylePreference)
+  const usedItemIds = new Set<string>()
+  
+  const mainOutfit = generateOutfit(clothes, weatherCategory, settings.stylePreference, usedItemIds)
+  // Track items used in main outfit
+  if (mainOutfit.layer) usedItemIds.add(mainOutfit.layer.id)
+  if (mainOutfit.top) usedItemIds.add(mainOutfit.top.id)
+  if (mainOutfit.bottom) usedItemIds.add(mainOutfit.bottom.id)
+  if (mainOutfit.shoes) usedItemIds.add(mainOutfit.shoes.id)
   setOutfit(mainOutfit)
   
-  // Generate alternate outfits
+  // Generate alternate outfits with different items
   const alts: Outfit[] = []
   for (let i = 0; i < 3; i++) {
-alts.push(generateOutfit(clothes, weatherCategory, settings.stylePreference))
+    const altOutfit = generateOutfit(clothes, weatherCategory, settings.stylePreference, usedItemIds)
+    // Track items used in this alternate outfit for subsequent alternates
+    if (altOutfit.layer) usedItemIds.add(altOutfit.layer.id)
+    if (altOutfit.top) usedItemIds.add(altOutfit.top.id)
+    if (altOutfit.bottom) usedItemIds.add(altOutfit.bottom.id)
+    if (altOutfit.shoes) usedItemIds.add(altOutfit.shoes.id)
+    alts.push(altOutfit)
   }
   setAlternateOutfits(alts)
   setIsGenerating(false)
