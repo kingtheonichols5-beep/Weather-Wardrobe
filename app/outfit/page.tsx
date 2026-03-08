@@ -319,6 +319,22 @@ function selectItemWithStylePriority(
   return topItems[Math.floor(Math.random() * topItems.length)].item
 }
 
+// Helper to check if two outfits are the same
+function areOutfitsSame(outfit1: Outfit, outfit2: Outfit): boolean {
+  const getId = (item: ClothingItem | null) => item?.id || null
+  return (
+    getId(outfit1.layer) === getId(outfit2.layer) &&
+    getId(outfit1.top) === getId(outfit2.top) &&
+    getId(outfit1.bottom) === getId(outfit2.bottom) &&
+    getId(outfit1.shoes) === getId(outfit2.shoes)
+  )
+}
+
+// Helper to check if an outfit already exists in a list
+function outfitExistsIn(outfit: Outfit, outfits: Outfit[]): boolean {
+  return outfits.some(existing => areOutfitsSame(outfit, existing))
+}
+
 // Helper to check if an item has formal condition
 function isFormalItem(item: ClothingItem | null): boolean {
   if (!item) return false
@@ -638,11 +654,28 @@ setTimeout(() => {
   const mainOutfit = generateOutfit(clothes, weatherCategory, settings.stylePreference, new Set())
   setOutfit(mainOutfit)
   
-  // Generate 3 alternate outfits - no exclusions, same outfit can appear multiple times
+  // Generate 3 unique alternate outfits
   const alts: Outfit[] = []
-  for (let i = 0; i < 3; i++) {
+  const allOutfits = [mainOutfit]
+  let attempts = 0
+  const maxAttempts = 20 // Prevent infinite loop
+  
+  while (alts.length < 3 && attempts < maxAttempts) {
+    const newOutfit = generateOutfit(clothes, weatherCategory, settings.stylePreference, new Set())
+    
+    // Only add if this outfit is unique
+    if (!outfitExistsIn(newOutfit, allOutfits)) {
+      alts.push(newOutfit)
+      allOutfits.push(newOutfit)
+    }
+    attempts++
+  }
+  
+  // If we couldn't generate 3 unique outfits, fill remaining with any generated outfits
+  while (alts.length < 3) {
     alts.push(generateOutfit(clothes, weatherCategory, settings.stylePreference, new Set()))
   }
+  
   setAlternateOutfits(alts)
   setIsGenerating(false)
   }, 1500)
@@ -663,11 +696,28 @@ setTimeout(() => {
   const mainOutfit = generateOutfit(clothes, weatherCategory, settings.stylePreference, new Set())
   setOutfit(mainOutfit)
   
-  // Generate 3 alternate outfits - no exclusions, same outfit can appear multiple times
+  // Generate 3 unique alternate outfits
   const alts: Outfit[] = []
-  for (let i = 0; i < 3; i++) {
+  const allOutfits = [mainOutfit]
+  let attempts = 0
+  const maxAttempts = 20 // Prevent infinite loop
+  
+  while (alts.length < 3 && attempts < maxAttempts) {
+    const newOutfit = generateOutfit(clothes, weatherCategory, settings.stylePreference, new Set())
+    
+    // Only add if this outfit is unique
+    if (!outfitExistsIn(newOutfit, allOutfits)) {
+      alts.push(newOutfit)
+      allOutfits.push(newOutfit)
+    }
+    attempts++
+  }
+  
+  // If we couldn't generate 3 unique outfits, fill remaining with any generated outfits
+  while (alts.length < 3) {
     alts.push(generateOutfit(clothes, weatherCategory, settings.stylePreference, new Set()))
   }
+  
   setAlternateOutfits(alts)
   setIsGenerating(false)
   }, 1500)
