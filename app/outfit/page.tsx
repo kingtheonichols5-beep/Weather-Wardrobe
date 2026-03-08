@@ -269,6 +269,17 @@ function getStyleMatchScore(item: ClothingItem, stylePreferences: string[]): num
         if (itemType.includes("rain") || itemType.includes("waterproof") || itemType.includes("windbreaker")) score += 2
         if (itemType.includes("boots") || itemType.includes("jacket")) score += 1
         break
+      case "beach/pool":
+        if (itemConditions.includes("beach/pool")) score += 3
+        if (itemType.includes("sandal") || itemType.includes("tank") || itemType.includes("shorts")) score += 2
+        if (itemType.includes("flip") || itemType.includes("swim") || itemType.includes("linen")) score += 2
+        break
+      case "comfy":
+        if (itemConditions.includes("comfy")) score += 3
+        if (itemFit === "oversized" || itemFit === "baggy") score += 2
+        if (itemType.includes("sweatpants") || itemType.includes("hoodie") || itemType.includes("joggers")) score += 2
+        if (itemType.includes("sneakers") || itemType.includes("slippers")) score += 1
+        break
     }
   }
   
@@ -361,10 +372,10 @@ function generateOutfit(clothes: ClothingItem[], weatherCategory: string, styleP
     ? Math.min(100, (totalStyleScore / maxPossibleStyleScore) * 100)
     : 100 // If no style preferences, consider it 100% match
   
-  // Combined accuracy (weighted: 60% weather, 40% style)
+  // Combined accuracy (weighted: 80% weather, 20% style)
   const accuracy = Math.round(
     stylePreferences.length > 0 
-      ? (weatherAccuracy * 0.6) + (styleAccuracy * 0.4)
+      ? (weatherAccuracy * 0.8) + (styleAccuracy * 0.2)
       : weatherAccuracy
   )
   

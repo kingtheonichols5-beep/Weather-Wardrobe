@@ -64,7 +64,7 @@ function getSavedOutfits(): Outfit[] {
   return stored ? JSON.parse(stored) : []
 }
 
-const styleOptions = ["Casual", "Streetwear", "Athletic", "Minimal", "Formal", "Rainy"]
+const styleOptions = ["Casual", "Streetwear", "Athletic", "Minimal", "Formal", "Rainy", "Beach/Pool", "Comfy"]
 const colorPreferences = [
   { value: "neutral", label: "Neutral tones" },
   { value: "bold", label: "Bold colors" },
