@@ -1,5 +1,6 @@
 "use client"
 
+// Closet page component
 import { useState, useCallback, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
