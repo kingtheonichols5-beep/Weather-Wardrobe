@@ -349,6 +349,7 @@ const handleDeleteItem = (id: string) => {
               )}
 
               {uploadStep === 2 && (
+                <>
                 <ScrollArea className="h-[400px] pr-4">
                   <div className="space-y-4">
                   {previewUrl && (
@@ -549,6 +550,7 @@ const handleDeleteItem = (id: string) => {
                     Add to Closet
                   </Button>
                 </div>
+                </>
               )}
             </DialogContent>
           </Dialog>
