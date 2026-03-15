@@ -535,7 +535,6 @@ const handleDeleteItem = (id: string) => {
                       </div>
                     </div>
                   </div>
-                  </div>
                 </ScrollArea>
 
                 <div className="flex gap-3 pt-2">
@@ -750,7 +749,6 @@ const handleDeleteItem = (id: string) => {
                     </div>
                   </div>
                 </div>
-              </div>
               </ScrollArea>
 
               <div className="flex gap-3 pt-2">
