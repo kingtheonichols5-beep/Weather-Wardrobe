@@ -1,11 +1,9 @@
 "use client"
 
-import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
 import { Sparkles } from "lucide-react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useEffect } from "react"
+import { useState } from "react"
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -31,29 +29,24 @@ function GoogleIcon({ className }: { className?: string }) {
 }
 
 export default function AuthPage() {
-  const { signInWithGoogle, user, isLoading } = useAuth()
-  const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false)
 
-  useEffect(() => {
-    if (user && !isLoading) {
-      router.push("/closet")
-    }
-  }, [user, isLoading, router])
-
-  const handleSignIn = async () => {
-    await signInWithGoogle()
+  const handleSignIn = () => {
+    setIsLoading(true)
+    // Demo: simulate loading then show alert
+    setTimeout(() => {
+      setIsLoading(false)
+      alert("Sign in with Google - Connect Supabase to enable real authentication")
+    }, 500)
   }
 
-  const handleSignUp = async () => {
-    await signInWithGoogle()
-  }
-
-  if (isLoading) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </main>
-    )
+  const handleSignUp = () => {
+    setIsLoading(true)
+    // Demo: simulate loading then show alert
+    setTimeout(() => {
+      setIsLoading(false)
+      alert("Sign up with Google - Connect Supabase to enable real authentication")
+    }, 500)
   }
 
   return (
@@ -82,6 +75,7 @@ export default function AuthPage() {
             <div className="space-y-4">
               <Button
                 onClick={handleSignIn}
+                disabled={isLoading}
                 variant="outline"
                 className="h-12 w-full gap-3 text-base font-medium"
               >
@@ -100,6 +94,7 @@ export default function AuthPage() {
 
               <Button
                 onClick={handleSignUp}
+                disabled={isLoading}
                 className="h-12 w-full gap-3 text-base font-medium"
               >
                 <GoogleIcon className="h-5 w-5" />
