@@ -1,144 +1,73 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { Navigation } from "@/components/navigation"
 import { Button } from "@/components/ui/button"
 import { 
-  MapPin, 
   Thermometer, 
   Shirt,
-  Palette,
   Trash2,
-  Check,
-  BarChart3
+  BarChart3,
+  Cloud,
+  CloudOff,
+  Loader2
 } from "lucide-react"
-
-interface ClothingItem {
-  id: string
-  name: string
-  category: "top" | "bottom" | "shoes"
-  type: string
-  color: string
-  fit: string
-  temperature: string[]
-  imageUrl: string
-}
-
-interface Settings {
-  units: "fahrenheit" | "celsius"
-  stylePreference: string[]
-  colorPreference: string[]
-}
-
-interface Outfit {
-  top: ClothingItem | null
-  bottom: ClothingItem | null
-  shoes: ClothingItem | null
-  score: number
-  explanation: string
-}
-
-const STORAGE_KEY = "stylist-closet"
-const SETTINGS_KEY = "stylist-settings"
-const SAVED_OUTFITS_KEY = "stylist-saved-outfits"
-
-function getStoredClothes(): ClothingItem[] {
-  if (typeof window === "undefined") return []
-  const stored = localStorage.getItem(STORAGE_KEY)
-  return stored ? JSON.parse(stored) : []
-}
-
-function getSettings(): Settings {
-  if (typeof window === "undefined") return { units: "fahrenheit", stylePreference: [], colorPreference: [] }
-  const stored = localStorage.getItem(SETTINGS_KEY)
-  return stored ? JSON.parse(stored) : { units: "fahrenheit", stylePreference: [], colorPreference: [] }
-}
-
-function saveSettings(settings: Settings) {
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings))
-}
-
-function getSavedOutfits(): Outfit[] {
-  if (typeof window === "undefined") return []
-  const stored = localStorage.getItem(SAVED_OUTFITS_KEY)
-  return stored ? JSON.parse(stored) : []
-}
+import { useSettingsSync } from "@/hooks/use-settings-sync"
+import { useClosetSync } from "@/hooks/use-closet-sync"
+import { useAuth } from "@/components/auth-provider"
 
 const styleOptions = ["Casual", "Streetwear", "Athletic", "Minimal", "Formal", "Rainy", "Beach/Pool", "Comfy"]
-const colorPreferences = [
-  { value: "neutral", label: "Neutral tones" },
-  { value: "bold", label: "Bold colors" },
-  { value: "pastel", label: "Pastel colors" },
-  { value: "dark", label: "Dark colors" },
-  { value: "any", label: "No preference" },
-]
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState<Settings>({ units: "fahrenheit", stylePreference: [], colorPreference: [] })
-  const [clothes, setClothes] = useState<ClothingItem[]>([])
-  const [savedOutfits, setSavedOutfits] = useState<Outfit[]>([])
-  const [saved, setSaved] = useState(false)
+  const { user } = useAuth()
+  const { 
+    settings, 
+    isLoading: settingsLoading, 
+    isSyncing: settingsSyncing,
+    toggleStyle,
+    setUnits
+  } = useSettingsSync()
+  const { 
+    clothes, 
+    savedOutfits, 
+    isLoading: closetLoading,
+    isSyncing: closetSyncing 
+  } = useClosetSync()
 
-  useEffect(() => {
-    setSettings(getSettings())
-    setClothes(getStoredClothes())
-    setSavedOutfits(getSavedOutfits())
-  }, [])
-
-  const handleSaveSettings = () => {
-    saveSettings(settings)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
-  }
-
-  const toggleStyle = (style: string) => {
-    const updated = {
-      ...settings,
-      stylePreference: settings.stylePreference.includes(style)
-        ? settings.stylePreference.filter(s => s !== style)
-        : [...settings.stylePreference, style]
-    }
-    setSettings(updated)
-    saveSettings(updated)
-  }
-
-  const toggleColorPreference = (color: string) => {
-    const updated = {
-      ...settings,
-      colorPreference: settings.colorPreference.includes(color)
-        ? settings.colorPreference.filter(c => c !== color)
-        : [...settings.colorPreference, color]
-    }
-    setSettings(updated)
-    saveSettings(updated)
-  }
+  const isLoading = settingsLoading || closetLoading
+  const isSyncing = settingsSyncing || closetSyncing
 
   const handleClearCloset = () => {
-    if (confirm("Are you sure you want to delete all clothes from your closet?")) {
-      localStorage.removeItem(STORAGE_KEY)
-      setClothes([])
+    if (confirm("Are you sure you want to delete all clothes from your closet? This will also clear your local storage.")) {
+      localStorage.removeItem("stylist-closet")
+      window.location.reload()
     }
   }
 
   const handleClearSavedOutfits = () => {
     if (confirm("Are you sure you want to delete all saved outfits?")) {
-      localStorage.removeItem(SAVED_OUTFITS_KEY)
-      setSavedOutfits([])
+      localStorage.removeItem("stylist-saved-outfits")
+      window.location.reload()
     }
   }
 
   // Calculate closet stats
   const stats = {
     total: clothes.length,
+    layers: clothes.filter(c => c.category === "layer").length,
     tops: clothes.filter(c => c.category === "top").length,
     bottoms: clothes.filter(c => c.category === "bottom").length,
     shoes: clothes.filter(c => c.category === "shoes").length,
+    accessories: clothes.filter(c => c.category === "accessories").length,
     savedOutfits: savedOutfits.length,
   }
 
   // Find most common color
   const colorCounts = clothes.reduce((acc, item) => {
-    acc[item.color] = (acc[item.color] || 0) + 1
+    if (item.color && Array.isArray(item.color)) {
+      item.color.forEach(c => {
+        acc[c] = (acc[c] || 0) + 1
+      })
+    }
     return acc
   }, {} as Record<string, number>)
   const mostCommonColor = Object.entries(colorCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A"
@@ -148,9 +77,46 @@ export default function SettingsPage() {
       <Navigation />
 
       <main className="mx-auto max-w-2xl px-6 py-8">
-        <h1 className="mb-8 text-3xl font-bold tracking-tight">Settings</h1>
+        <div className="mb-8 flex items-center justify-between">
+          <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+          
+          {/* Sync Status Indicator */}
+          <div className="flex items-center gap-2 text-sm">
+            {isLoading || isSyncing ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                <span className="text-muted-foreground">Syncing...</span>
+              </>
+            ) : user ? (
+              <>
+                <Cloud className="h-4 w-4 text-green-500" />
+                <span className="text-muted-foreground">Synced</span>
+              </>
+            ) : (
+              <>
+                <CloudOff className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Local only</span>
+              </>
+            )}
+          </div>
+        </div>
 
         <div className="space-y-8">
+          {/* Sync Status Banner */}
+          {!user && (
+            <section className="rounded-2xl border border-primary/20 bg-primary/5 p-6">
+              <div className="flex items-start gap-3">
+                <CloudOff className="h-5 w-5 text-primary mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-foreground">Sign in to sync your data</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Your closet and settings are currently saved locally. Sign in with Google to sync across devices and never lose your wardrobe.
+                  </p>
+                </div>
+              </div>
+            </section>
+          )}
+
           {/* Closet Stats */}
           <section className="rounded-2xl bg-secondary p-6">
             <div className="mb-4 flex items-center gap-2">
@@ -158,10 +124,14 @@ export default function SettingsPage() {
               <h2 className="text-lg font-semibold">Closet Stats</h2>
             </div>
             
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
               <div className="rounded-xl bg-background p-4 text-center">
                 <p className="text-2xl font-bold">{stats.total}</p>
                 <p className="text-sm text-muted-foreground">Total Items</p>
+              </div>
+              <div className="rounded-xl bg-background p-4 text-center">
+                <p className="text-2xl font-bold">{stats.layers}</p>
+                <p className="text-sm text-muted-foreground">Layers</p>
               </div>
               <div className="rounded-xl bg-background p-4 text-center">
                 <p className="text-2xl font-bold">{stats.tops}</p>
@@ -174,6 +144,10 @@ export default function SettingsPage() {
               <div className="rounded-xl bg-background p-4 text-center">
                 <p className="text-2xl font-bold">{stats.shoes}</p>
                 <p className="text-sm text-muted-foreground">Shoes</p>
+              </div>
+              <div className="rounded-xl bg-background p-4 text-center">
+                <p className="text-2xl font-bold">{stats.accessories}</p>
+                <p className="text-sm text-muted-foreground">Accessories</p>
               </div>
             </div>
 
@@ -198,22 +172,14 @@ export default function SettingsPage() {
               <Button
                 variant={settings.units === "fahrenheit" ? "default" : "outline"}
                 className="flex-1 rounded-full"
-                onClick={() => {
-                  const updated = { ...settings, units: "fahrenheit" as const }
-                  setSettings(updated)
-                  saveSettings(updated)
-                }}
+                onClick={() => setUnits("fahrenheit")}
               >
                 Fahrenheit (°F)
               </Button>
               <Button
                 variant={settings.units === "celsius" ? "default" : "outline"}
                 className="flex-1 rounded-full"
-                onClick={() => {
-                  const updated = { ...settings, units: "celsius" as const }
-                  setSettings(updated)
-                  saveSettings(updated)
-                }}
+                onClick={() => setUnits("celsius")}
               >
                 Celsius (°C)
               </Button>
