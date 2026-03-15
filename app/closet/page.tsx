@@ -1,261 +1,133 @@
 "use client"
 
-// Closet page component
 import { useState, useCallback, useEffect } from "react"
-import Link from "next/link"
 import Image from "next/image"
-import { Navigation } from "@/components/navigation"
+import { useDropzone } from "react-dropzone"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Plus, Upload, X, Shirt, Sparkles, Heart, Trash2, Pencil } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
-interface ClothingItem {
+type ClothingItem = {
   id: string
   name: string
   category: "layer" | "top" | "bottom" | "shoes" | "accessories"
   type: string
   color: string[]
-  fit: string
-  condition: string[]
   temperature: string[]
-  imageUrl: string
+  image: string
+  favorite: boolean
+  fit?: string
+  condition?: string[]
 }
 
-interface Outfit {
-  layer: ClothingItem | null
-  top: ClothingItem | null
-  bottom: ClothingItem | null
-  shoes: ClothingItem | null
-  accessory: ClothingItem | null
-  score: number
-  accuracy: number
-  explanation: string
-}
-
-const categoryTypes = {
-  layer: ["Hoodie", "Jacket", "Cardigan", "Blazer", "Coat", "Vest", "Windbreaker", "Fleece", "Denim Jacket", "Puffer"],
-  top: ["T-Shirt", "Tank Top", "Sweater", "Flannel", "Button-Up", "Polo", "Long Sleeve", "Blouse", "Henley"],
-  bottom: ["Jeans", "Shorts", "Sweatpants", "Joggers", "Chinos", "Skirt", "Dress Pants"],
-  shoes: ["Sneakers", "Boots", "Sandals", "Loafers", "Running Shoes", "Dress Shoes"],
-  accessories: ["Rings", "Earrings", "Necklaces", "Beanies", "Caps", "Other Hats", "Sunglasses", "Watches", "Glasses"],
+const categoryTypes: Record<string, string[]> = {
+  layer: ["Jacket", "Coat", "Hoodie", "Cardigan", "Vest", "Blazer", "Sweater"],
+  top: ["T-Shirt", "Shirt", "Blouse", "Tank Top", "Polo", "Sweater", "Crop Top"],
+  bottom: ["Jeans", "Pants", "Shorts", "Skirt", "Dress Pants", "Joggers", "Leggings"],
+  shoes: ["Sneakers", "Boots", "Sandals", "Heels", "Flats", "Loafers", "Athletic"],
+  accessories: ["Hat", "Scarf", "Belt", "Watch", "Jewelry", "Bag", "Sunglasses"],
 }
 
 const colorOptions = [
-  { value: "black", label: "Black", hex: "#111111" },
+  { value: "black", label: "Black", hex: "#000000" },
   { value: "white", label: "White", hex: "#FFFFFF" },
-  { value: "blue", label: "Blue", hex: "#3B82F6" },
-  { value: "red", label: "Red", hex: "#EF4444" },
-  { value: "green", label: "Green", hex: "#22C55E" },
-  { value: "brown", label: "Brown", hex: "#92400E" },
-  { value: "grey", label: "Grey", hex: "#6B7280" },
-  { value: "beige", label: "Beige", hex: "#D4A574" },
-  { value: "yellow", label: "Yellow", hex: "#EAB308" },
-  { value: "purple", label: "Purple", hex: "#A855F7" },
-  { value: "pink", label: "Pink", hex: "#EC4899" },
-  { value: "orange", label: "Orange", hex: "#F97316" },
-  { value: "navy", label: "Navy", hex: "#1E3A5F" },
+  { value: "gray", label: "Gray", hex: "#808080" },
+  { value: "navy", label: "Navy", hex: "#000080" },
+  { value: "blue", label: "Blue", hex: "#0066CC" },
+  { value: "red", label: "Red", hex: "#CC0000" },
+  { value: "green", label: "Green", hex: "#228B22" },
+  { value: "yellow", label: "Yellow", hex: "#FFD700" },
+  { value: "orange", label: "Orange", hex: "#FF8C00" },
+  { value: "pink", label: "Pink", hex: "#FF69B4" },
+  { value: "purple", label: "Purple", hex: "#800080" },
+  { value: "brown", label: "Brown", hex: "#8B4513" },
+  { value: "beige", label: "Beige", hex: "#F5F5DC" },
+  { value: "cream", label: "Cream", hex: "#FFFDD0" },
 ]
 
-const fitOptions = ["Fitted", "Regular", "Oversized", "Baggy"]
-const shoeConditionOptions = ["Athletic", "Casual", "Formal", "Rainy", "Comfy", "Beach/Pool", "Streetwear", "Hiking", "Running"]
-const conditionOptions = ["Athletic", "Casual", "Formal", "Rainy", "Comfy", "Beach/Pool", "Streetwear"]
-const layerConditionOptions = ["Athletic", "Casual", "Formal", "Rainy", "Comfy", "Streetwear"]
 const temperatureOptions = [
-  { value: "cold", label: "Cold" },
-  { value: "mild", label: "Mild" },
-  { value: "warm", label: "Warm" },
-  { value: "hot", label: "Hot" },
-  { value: "n/a", label: "N/A" },
+  { value: "hot", label: "Hot (80°F+)" },
+  { value: "warm", label: "Warm (65-79°F)" },
+  { value: "mild", label: "Mild (50-64°F)" },
+  { value: "cool", label: "Cool (35-49°F)" },
+  { value: "cold", label: "Cold (<35°F)" },
 ]
 
-const STORAGE_KEY = "stylist-closet"
-const SAVED_OUTFITS_KEY = "stylist-saved-outfits"
+const fitOptions = ["Slim", "Regular", "Relaxed", "Oversized"]
+const conditionOptions = ["Casual", "Formal", "Athletic", "Business", "Party", "Outdoor", "Loungewear"]
+const layerConditionOptions = ["Casual", "Formal", "Athletic", "Business", "Outdoor", "Rain", "Snow"]
+const shoeConditionOptions = ["Casual", "Formal", "Athletic", "Business", "Party", "Outdoor", "Beach"]
 
-function getStoredClothes(): ClothingItem[] {
-  if (typeof window === "undefined") return []
-  const stored = localStorage.getItem(STORAGE_KEY)
-  return stored ? JSON.parse(stored) : []
+const categoryLabels: Record<string, string> = {
+  layer: "Layers",
+  top: "Tops",
+  bottom: "Bottoms",
+  shoes: "Shoes",
+  accessories: "Accessories",
 }
 
-function saveClothes(clothes: ClothingItem[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(clothes))
-}
-
-function getSavedOutfits(): Outfit[] {
-  if (typeof window === "undefined") return []
-  const stored = localStorage.getItem(SAVED_OUTFITS_KEY)
-  return stored ? JSON.parse(stored) : []
-}
-
-function deleteSavedOutfit(index: number) {
-  const saved = getSavedOutfits()
-  saved.splice(index, 1)
-  localStorage.setItem(SAVED_OUTFITS_KEY, JSON.stringify(saved))
+const categoryIcons: Record<string, React.ReactNode> = {
+  layer: <Shirt className="h-4 w-4" />,
+  top: <Shirt className="h-4 w-4" />,
+  bottom: <Shirt className="h-4 w-4" />,
+  shoes: <Sparkles className="h-4 w-4" />,
+  accessories: <Sparkles className="h-4 w-4" />,
 }
 
 export default function ClosetPage() {
   const [clothes, setClothes] = useState<ClothingItem[]>([])
-  const [savedOutfits, setSavedOutfits] = useState<Outfit[]>([])
-  const [isUploadOpen, setIsUploadOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<ClothingItem | null>(null)
-  
-  useEffect(() => {
-    setClothes(getStoredClothes())
-    setSavedOutfits(getSavedOutfits())
-  }, [])
   const [uploadStep, setUploadStep] = useState(1)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
+  const [activeCategory, setActiveCategory] = useState<string>("all")
   const [newItem, setNewItem] = useState<Partial<ClothingItem>>({
+    color: [],
     temperature: [],
     condition: [],
-    color: [],
   })
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [dragActive, setDragActive] = useState(false)
 
-  const handleDrag = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true)
-    } else if (e.type === "dragleave") {
-      setDragActive(false)
+  useEffect(() => {
+    const saved = localStorage.getItem("closet-items")
+    if (saved) {
+      setClothes(JSON.parse(saved))
     }
   }, [])
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragActive(false)
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFile(e.dataTransfer.files[0])
+  useEffect(() => {
+    if (clothes.length > 0) {
+      localStorage.setItem("closet-items", JSON.stringify(clothes))
     }
-  }, [])
+  }, [clothes])
 
-  const handleFile = (file: File) => {
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      setPreviewUrl(reader.result as string)
-      setNewItem((prev) => ({ ...prev, imageUrl: reader.result as string }))
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    const file = acceptedFiles[0]
+    if (file) {
+      setUploadedFile(file)
+      const url = URL.createObjectURL(file)
+      setPreviewUrl(url)
       setUploadStep(2)
     }
-    reader.readAsDataURL(file)
-  }
+  }, [])
 
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      handleFile(e.target.files[0])
-    }
-  }
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: { "image/*": [".png", ".jpg", ".jpeg", ".webp"] },
+    maxFiles: 1,
+  })
 
-  const handleSaveItem = () => {
-    const isShoes = newItem.category === "shoes"
-    const isAccessories = newItem.category === "accessories"
-    const hasBaseFields = newItem.name && newItem.category && newItem.type && newItem.color?.length && newItem.temperature?.length && newItem.imageUrl
-    const hasRequiredFields = (isAccessories || isShoes) ? (hasBaseFields && newItem.condition?.length) : (hasBaseFields && newItem.fit)
-    const hasCondition = (newItem.condition?.length ?? 0) > 0
-    
-    if (hasRequiredFields && hasCondition) {
-      const item: ClothingItem = {
-        id: Date.now().toString(),
-        name: newItem.name,
-        category: newItem.category as ClothingItem["category"],
-        type: newItem.type,
-        color: newItem.color || [],
-        fit: (isAccessories || isShoes) ? "N/A" : newItem.fit,
-        condition: newItem.condition || [],
-        temperature: newItem.temperature,
-        imageUrl: newItem.imageUrl,
-      }
-      const updatedClothes = [...clothes, item]
-      setClothes(updatedClothes)
-      saveClothes(updatedClothes)
-      resetUpload()
-    }
-  }
-
-const handleDeleteItem = (id: string) => {
-    const updatedClothes = clothes.filter((c) => c.id !== id)
-    setClothes(updatedClothes)
-    saveClothes(updatedClothes)
-  }
-
-  const handleDeleteOutfit = (index: number) => {
-    deleteSavedOutfit(index)
-    setSavedOutfits(getSavedOutfits())
-  }
-
-  const handleEditItem = (item: ClothingItem) => {
-    setEditingItem(item)
-    setNewItem({
-      id: item.id,
-      name: item.name,
-      category: item.category,
-      type: item.type,
-      color: item.color,
-      fit: item.fit,
-      condition: item.condition,
-      temperature: item.temperature,
-      imageUrl: item.imageUrl,
-    })
-    setPreviewUrl(item.imageUrl)
-    setIsEditOpen(true)
-  }
-
-  const handleSaveEdit = () => {
-    const isShoes = newItem.category === "shoes"
-    const isAccessories = newItem.category === "accessories"
-    const hasBaseFields = newItem.name && newItem.category && newItem.type && newItem.color?.length && newItem.temperature?.length && newItem.imageUrl
-    const hasRequiredFields = (isAccessories || isShoes) ? (hasBaseFields && newItem.condition?.length) : (hasBaseFields && newItem.fit)
-    const hasCondition = (newItem.condition?.length ?? 0) > 0
-    
-    if (hasRequiredFields && hasCondition && editingItem) {
-      const updatedItem: ClothingItem = {
-        id: editingItem.id,
-        name: newItem.name!,
-        category: newItem.category as ClothingItem["category"],
-        type: newItem.type!,
-        color: newItem.color || [],
-        fit: (isAccessories || isShoes) ? "N/A" : newItem.fit!,
-        condition: newItem.condition || [],
-        temperature: newItem.temperature!,
-        imageUrl: newItem.imageUrl!,
-      }
-      const updatedClothes = clothes.map(c => c.id === editingItem.id ? updatedItem : c)
-      setClothes(updatedClothes)
-      saveClothes(updatedClothes)
-      resetEdit()
-    }
-  }
-
-  const resetEdit = () => {
-    setIsEditOpen(false)
-    setEditingItem(null)
-    setNewItem({ temperature: [], condition: [], color: [] })
-    setPreviewUrl(null)
-  }
-
-  const resetUpload = () => {
-    setIsUploadOpen(false)
-    setUploadStep(1)
-    setNewItem({ temperature: [], condition: [], color: [] })
-    setPreviewUrl(null)
+  const toggleColor = (color: string) => {
+    setNewItem((prev) => ({
+      ...prev,
+      color: prev.color?.includes(color) ? prev.color.filter((c) => c !== color) : [...(prev.color || []), color],
+    }))
   }
 
   const toggleTemperature = (temp: string) => {
@@ -264,15 +136,6 @@ const handleDeleteItem = (id: string) => {
       temperature: prev.temperature?.includes(temp)
         ? prev.temperature.filter((t) => t !== temp)
         : [...(prev.temperature || []), temp],
-    }))
-  }
-
-  const toggleColor = (color: string) => {
-    setNewItem((prev) => ({
-      ...prev,
-      color: prev.color?.includes(color)
-        ? prev.color.filter((c) => c !== color)
-        : [...(prev.color || []), color],
     }))
   }
 
@@ -285,66 +148,123 @@ const handleDeleteItem = (id: string) => {
     }))
   }
 
-  const groupedClothes = {
-    layer: clothes.filter((c) => c.category === "layer"),
-    top: clothes.filter((c) => c.category === "top"),
-    bottom: clothes.filter((c) => c.category === "bottom"),
-    shoes: clothes.filter((c) => c.category === "shoes"),
-    accessories: clothes.filter((c) => c.category === "accessories"),
+  const handleSaveItem = () => {
+    if (!newItem.name || !newItem.category || !newItem.type || !previewUrl) return
+
+    const item: ClothingItem = {
+      id: Date.now().toString(),
+      name: newItem.name,
+      category: newItem.category as ClothingItem["category"],
+      type: newItem.type,
+      color: newItem.color || [],
+      temperature: newItem.temperature || [],
+      image: previewUrl,
+      favorite: false,
+      fit: newItem.fit,
+      condition: newItem.condition,
+    }
+
+    setClothes((prev) => [...prev, item])
+    resetForm()
   }
+
+  const handleSaveEdit = () => {
+    if (!editingItem || !newItem.name || !newItem.category || !newItem.type) return
+
+    setClothes((prev) =>
+      prev.map((item) =>
+        item.id === editingItem.id
+          ? {
+              ...item,
+              name: newItem.name!,
+              category: newItem.category as ClothingItem["category"],
+              type: newItem.type!,
+              color: newItem.color || [],
+              temperature: newItem.temperature || [],
+              fit: newItem.fit,
+              condition: newItem.condition,
+              image: previewUrl || item.image,
+            }
+          : item
+      )
+    )
+    resetEdit()
+  }
+
+  const resetForm = () => {
+    setIsOpen(false)
+    setUploadStep(1)
+    setPreviewUrl(null)
+    setUploadedFile(null)
+    setNewItem({ color: [], temperature: [], condition: [] })
+  }
+
+  const resetEdit = () => {
+    setIsEditOpen(false)
+    setEditingItem(null)
+    setPreviewUrl(null)
+    setNewItem({ color: [], temperature: [], condition: [] })
+  }
+
+  const startEdit = (item: ClothingItem) => {
+    setEditingItem(item)
+    setNewItem({
+      name: item.name,
+      category: item.category,
+      type: item.type,
+      color: item.color,
+      temperature: item.temperature,
+      fit: item.fit,
+      condition: item.condition,
+    })
+    setPreviewUrl(item.image)
+    setIsEditOpen(true)
+  }
+
+  const toggleFavorite = (id: string) => {
+    setClothes((prev) => prev.map((item) => (item.id === id ? { ...item, favorite: !item.favorite } : item)))
+  }
+
+  const deleteItem = (id: string) => {
+    setClothes((prev) => prev.filter((item) => item.id !== id))
+  }
+
+  const filteredClothes = activeCategory === "all" ? clothes : clothes.filter((item) => item.category === activeCategory)
+
+  const categories = ["all", "layer", "top", "bottom", "shoes", "accessories"]
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation />
-
-      <main className="mx-auto max-w-7xl px-6 py-8">
+      <div className="mx-auto max-w-6xl px-4 py-8">
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">My Closet</h1>
-            <p className="mt-1 text-muted-foreground">
-              {clothes.length} items in your digital wardrobe
-            </p>
+            <p className="mt-1 text-muted-foreground">{clothes.length} items in your wardrobe</p>
           </div>
 
-          <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
+          <Dialog open={isOpen} onOpenChange={(open) => { if (!open) resetForm(); setIsOpen(open) }}>
             <DialogTrigger asChild>
-              <Button className="rounded-full" onClick={() => setIsUploadOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" />
-                Upload Clothing
+              <Button size="lg" className="gap-2">
+                <Plus className="h-5 w-5" />
+                Add Clothing
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-lg">
               <DialogHeader>
-                <DialogTitle>
-                  {uploadStep === 1 && "Upload Photo"}
-                  {uploadStep === 2 && "Clothing Details"}
-                </DialogTitle>
+                <DialogTitle>{uploadStep === 1 ? "Upload Clothing" : "Add Details"}</DialogTitle>
                 <DialogDescription className="sr-only">
-                  {uploadStep === 1 && "Upload a photo of your clothing item"}
-                  {uploadStep === 2 && "Enter details about your clothing item"}
+                  {uploadStep === 1 ? "Upload an image of your clothing item" : "Add details about your clothing item"}
                 </DialogDescription>
               </DialogHeader>
 
               {uploadStep === 1 && (
                 <div
-                  className={`relative flex min-h-[300px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-colors ${
-                    dragActive ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
-                  }`}
-                  onDragEnter={handleDrag}
-                  onDragLeave={handleDrag}
-                  onDragOver={handleDrag}
-                  onDrop={handleDrop}
-                  onClick={() => document.getElementById("file-input")?.click()}
+                  {...getRootProps()}
+                  className={`cursor-pointer rounded-2xl border-2 border-dashed p-12 text-center transition-colors ${isDragActive ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-primary/50"}`}
                 >
-                  <input
-                    id="file-input"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleFileInput}
-                  />
-                  <Upload className="mb-4 h-12 w-12 text-muted-foreground" />
-                  <p className="mb-2 text-lg font-medium">Drag and drop your photo</p>
+                  <input {...getInputProps()} />
+                  <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
+                  <p className="mt-4 font-medium">Drop your clothing image here</p>
                   <p className="text-sm text-muted-foreground">or click to browse</p>
                 </div>
               )}
@@ -508,16 +428,12 @@ const handleDeleteItem = (id: string) => {
             </DialogContent>
           </Dialog>
 
-          {/* Edit Dialog */}
           <Dialog open={isEditOpen} onOpenChange={(open) => { if (!open) resetEdit() }}>
             <DialogContent className="max-w-lg">
               <DialogHeader>
                 <DialogTitle>Edit Clothing</DialogTitle>
-                <DialogDescription className="sr-only">
-                  Edit details about your clothing item
-                </DialogDescription>
+                <DialogDescription className="sr-only">Edit details about your clothing item</DialogDescription>
               </DialogHeader>
-
               <div className="flex flex-col">
                 <ScrollArea className="h-[350px] pr-4">
                   <div className="space-y-4">
@@ -676,164 +592,62 @@ const handleDeleteItem = (id: string) => {
           </Dialog>
         </div>
 
-        {clothes.length === 0 ? (
-          <div className="flex min-h-[400px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border">
-            <Shirt className="mb-4 h-16 w-16 text-muted-foreground/50" />
-            <h3 className="mb-2 text-xl font-semibold">Your closet is empty</h3>
-            <p className="mb-6 text-muted-foreground">Start by uploading your first clothing item</p>
-            <Button className="rounded-full" onClick={() => setIsUploadOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Upload Clothing
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-10">
-            {(["layer", "top", "bottom", "shoes", "accessories"] as const).map((category) => (
-              groupedClothes[category].length > 0 && (
-                <section key={category}>
-                  <h2 className="mb-4 text-lg font-semibold capitalize">
-                    {category === "layer" ? "Layers" : category === "top" ? "Tops" : category === "bottom" ? "Bottoms" : category === "shoes" ? "Shoes" : "Accessories"}{" "}
-                    <span className="text-muted-foreground">({groupedClothes[category].length})</span>
-                  </h2>
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                    {groupedClothes[category].map((item) => (
-                      <div
-                        key={item.id}
-                        className="group relative cursor-pointer overflow-hidden rounded-2xl bg-secondary"
-                        onClick={() => handleEditItem(item)}
-                      >
-                        <div className="aspect-square">
-                          <Image
-                            src={item.imageUrl}
-                            alt={item.name}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                        <button
-                          className="absolute left-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-background/80 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100"
-                          onClick={(e) => { e.stopPropagation(); handleEditItem(item); }}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                        <button
-                          className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-background/80 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100"
-                          onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id); }}
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-3 pt-8">
-                          <p className="text-sm font-medium text-white">{item.name}</p>
-                          <p className="text-xs text-white/70">{item.type}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              )
+        <Tabs value={activeCategory} onValueChange={setActiveCategory} className="w-full">
+          <TabsList className="mb-6 flex w-full justify-start gap-2 bg-transparent p-0">
+            {categories.map((cat) => (
+              <TabsTrigger
+                key={cat}
+                value={cat}
+                className="rounded-full border border-border bg-background px-4 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                {cat === "all" ? "All Items" : categoryLabels[cat]}
+              </TabsTrigger>
             ))}
+          </TabsList>
 
-            <div className="flex justify-center pt-8">
-              <Link href="/outfit">
-                <Button size="lg" className="rounded-full">
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Generate Outfit
-                </Button>
-              </Link>
-            </div>
-
-            {/* Saved Outfits Section */}
-            {savedOutfits.length > 0 && (
-              <section className="mt-16 border-t border-border pt-10">
-                <div className="mb-6 flex items-center gap-2">
-                  <Heart className="h-5 w-5 text-primary" />
-                  <h2 className="text-xl font-semibold">Saved Outfits</h2>
-                  <span className="text-muted-foreground">({savedOutfits.length})</span>
+          <TabsContent value={activeCategory} className="mt-0">
+            {filteredClothes.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="mb-4 rounded-full bg-secondary p-6">
+                  <Shirt className="h-12 w-12 text-muted-foreground" />
                 </div>
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                  {savedOutfits.map((outfit, index) => (
-                    <div
-                      key={index}
-                      className="group relative overflow-hidden rounded-2xl border border-border bg-card p-4"
-                    >
-                      <button
-                        className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-destructive/10 text-destructive opacity-0 transition-opacity hover:bg-destructive/20 group-hover:opacity-100"
-                        onClick={() => handleDeleteOutfit(index)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                      <div className="mb-3 flex items-center gap-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-                          <Heart className="h-4 w-4 text-primary" />
+                <h3 className="text-lg font-semibold">No items yet</h3>
+                <p className="mt-1 text-muted-foreground">Add your first clothing item to get started</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                {filteredClothes.map((item) => (
+                  <Card key={item.id} className="group relative overflow-hidden">
+                    <CardContent className="p-0">
+                      <div className="relative aspect-square">
+                        <Image src={item.image} alt={item.name} fill className="object-cover" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+                        <div className="absolute bottom-0 left-0 right-0 translate-y-full p-3 transition-transform group-hover:translate-y-0">
+                          <div className="flex justify-center gap-2">
+                            <Button size="icon" variant="secondary" className="h-8 w-8" onClick={() => toggleFavorite(item.id)}>
+                              <Heart className={`h-4 w-4 ${item.favorite ? "fill-red-500 text-red-500" : ""}`} />
+                            </Button>
+                            <Button size="icon" variant="secondary" className="h-8 w-8" onClick={() => startEdit(item)}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button size="icon" variant="secondary" className="h-8 w-8" onClick={() => deleteItem(item.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
-<div>
-  <p className="text-sm font-medium">Outfit {index + 1}</p>
-  <p className="text-xs text-muted-foreground">
-    {outfit.accuracy !== undefined ? `${outfit.accuracy}% accuracy` : `Score: ${outfit.score}/10`}
-  </p>
-  </div>
                       </div>
-                      <div className="grid grid-cols-4 gap-2">
-                        {outfit.layer && (
-                          <div className="relative aspect-square overflow-hidden rounded-lg bg-secondary">
-                            <Image
-                              src={outfit.layer.imageUrl}
-                              alt={outfit.layer.name}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                        )}
-                        {outfit.top && (
-                          <div className="relative aspect-square overflow-hidden rounded-lg bg-secondary">
-                            <Image
-                              src={outfit.top.imageUrl}
-                              alt={outfit.top.name}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                        )}
-                        {outfit.bottom && (
-                          <div className="relative aspect-square overflow-hidden rounded-lg bg-secondary">
-                            <Image
-                              src={outfit.bottom.imageUrl}
-                              alt={outfit.bottom.name}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                        )}
-                        {outfit.shoes && (
-                          <div className="relative aspect-square overflow-hidden rounded-lg bg-secondary">
-                            <Image
-                              src={outfit.shoes.imageUrl}
-                              alt={outfit.shoes.name}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                        )}
-                        {outfit.accessory && (
-                          <div className="relative aspect-square overflow-hidden rounded-lg bg-secondary">
-                            <Image
-                              src={outfit.accessory.imageUrl}
-                              alt={outfit.accessory.name}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                        )}
+                      <div className="p-3">
+                        <h3 className="truncate font-medium">{item.name}</h3>
+                        <p className="text-sm text-muted-foreground">{item.type}</p>
                       </div>
-                      <p className="mt-3 text-xs text-muted-foreground line-clamp-2">{outfit.explanation}</p>
-                    </div>
-                  ))}
-                </div>
-              </section>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             )}
-          </div>
-        )}
-      </main>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   )
 }
