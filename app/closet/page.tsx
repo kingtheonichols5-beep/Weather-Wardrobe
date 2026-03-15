@@ -533,24 +533,23 @@ const handleDeleteItem = (id: string) => {
                           </button>
                         ))}
                       </div>
-                    </div>
                       </div>
                     </div>
-                  </ScrollArea>
-
-                  <div className="flex gap-3 pt-4">
-                    <Button variant="outline" className="flex-1" onClick={() => setUploadStep(1)}>
-                      Back
-                    </Button>
-                    <Button
-                      className="flex-1"
-                      onClick={handleSaveItem}
-                      disabled={!newItem.name || !newItem.category || !newItem.type || !newItem.color?.length || !newItem.temperature?.length || (newItem.category !== "shoes" && newItem.category !== "accessories" && !newItem.fit) || !newItem.condition?.length}
-                    >
-                      Add to Closet
-                    </Button>
                   </div>
+                </ScrollArea>
+                <div className="flex gap-3 pt-4">
+                  <Button variant="outline" className="flex-1" onClick={() => setUploadStep(1)}>
+                    Back
+                  </Button>
+                  <Button
+                    className="flex-1"
+                    onClick={handleSaveItem}
+                    disabled={!newItem.name || !newItem.category || !newItem.type || !newItem.color?.length || !newItem.temperature?.length || (newItem.category !== "shoes" && newItem.category !== "accessories" && !newItem.fit) || !newItem.condition?.length}
+                  >
+                    Add to Closet
+                  </Button>
                 </div>
+              </div>
               )}
             </DialogContent>
           </Dialog>
@@ -748,8 +747,7 @@ const handleDeleteItem = (id: string) => {
                           {temp.label}
                         </button>
                       ))}
-                    </div>
-                    </div>
+                  </div>
                     </div>
                   </div>
                 </ScrollArea>
