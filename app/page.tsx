@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Sparkles, Cloud, Palette, Upload } from "lucide-react"
+import { ArrowRight, Sparkles, Cloud, Palette, Upload, Shirt, Sun, Settings } from "lucide-react"
+import { Navigation } from "@/components/navigation"
 
 const floatingItems = [
   { id: 1, type: "hoodie", color: "#3B82F6", rotation: -15, x: 10, y: 15 },
@@ -96,19 +97,7 @@ export default function LandingPage() {
       </div>
 
       {/* Navigation */}
-      <header className="relative z-10 mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-        <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
-            <Sparkles className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <span className="text-xl font-semibold tracking-tight">Stylist</span>
-        </div>
-        <Link href="/auth">
-          <Button variant="outline" size="sm" className="rounded-full">
-            Sign In
-          </Button>
-        </Link>
-      </header>
+      <Navigation />
 
       {/* Hero Section */}
       <section className="relative z-10 mx-auto flex min-h-[calc(100vh-4rem)] max-w-4xl flex-col items-center justify-center px-6 text-center">
