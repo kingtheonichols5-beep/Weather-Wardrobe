@@ -534,23 +534,22 @@ const handleDeleteItem = (id: string) => {
                         ))}
                       </div>
                     </div>
-                      </div>
-                    </div>
-                  </ScrollArea>
-
-                  <div className="flex gap-3 pt-4">
-                    <Button variant="outline" className="flex-1" onClick={() => setUploadStep(1)}>
-                      Back
-                    </Button>
-                    <Button
-                      className="flex-1"
-                      onClick={handleSaveItem}
-                      disabled={!newItem.name || !newItem.category || !newItem.type || !newItem.color?.length || !newItem.temperature?.length || (newItem.category !== "shoes" && newItem.category !== "accessories" && !newItem.fit) || !newItem.condition?.length}
-                    >
-                      Add to Closet
-                    </Button>
                   </div>
+                </ScrollArea>
+
+                <div className="flex gap-3 pt-4">
+                  <Button variant="outline" className="flex-1" onClick={() => setUploadStep(1)}>
+                    Back
+                  </Button>
+                  <Button
+                    className="flex-1"
+                    onClick={handleSaveItem}
+                    disabled={!newItem.name || !newItem.category || !newItem.type || !newItem.color?.length || !newItem.temperature?.length || (newItem.category !== "shoes" && newItem.category !== "accessories" && !newItem.fit) || !newItem.condition?.length}
+                  >
+                    Add to Closet
+                  </Button>
                 </div>
+              </div>
               )}
             </DialogContent>
           </Dialog>
@@ -565,20 +564,21 @@ const handleDeleteItem = (id: string) => {
                 </DialogDescription>
               </DialogHeader>
 
-              <ScrollArea className="h-[400px] pr-4">
-              <div className="space-y-4">
-                {previewUrl && (
-                  <div className="relative mx-auto h-28 w-28 overflow-hidden rounded-xl bg-secondary">
-                    <Image
-                      src={previewUrl}
-                      alt="Preview"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                )}
+              <div className="flex flex-col">
+                <ScrollArea className="h-[350px] pr-4">
+                  <div className="space-y-4">
+                    {previewUrl && (
+                      <div className="relative mx-auto h-28 w-28 overflow-hidden rounded-xl bg-secondary">
+                        <Image
+                          src={previewUrl}
+                          alt="Preview"
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    )}
 
-                <div className="space-y-3">
+                    <div className="space-y-3">
                   <div>
                     <label className="mb-2 block text-sm font-medium">Name</label>
                     <Input
@@ -748,21 +748,22 @@ const handleDeleteItem = (id: string) => {
                         </button>
                       ))}
                     </div>
+                    </div>
                   </div>
-                </div>
-              </ScrollArea>
+                </ScrollArea>
 
-              <div className="flex gap-3 pt-2">
-                <Button variant="outline" className="flex-1" onClick={resetEdit}>
-                  Cancel
-                </Button>
-                <Button
-                  className="flex-1"
-                  onClick={handleSaveEdit}
-                  disabled={!newItem.name || !newItem.category || !newItem.type || !newItem.color?.length || !newItem.temperature?.length || (newItem.category !== "shoes" && newItem.category !== "accessories" && !newItem.fit) || !newItem.condition?.length}
-                >
-                  Save Changes
-                </Button>
+                <div className="flex gap-3 pt-4">
+                  <Button variant="outline" className="flex-1" onClick={resetEdit}>
+                    Cancel
+                  </Button>
+                  <Button
+                    className="flex-1"
+                    onClick={handleSaveEdit}
+                    disabled={!newItem.name || !newItem.category || !newItem.type || !newItem.color?.length || !newItem.temperature?.length || (newItem.category !== "shoes" && newItem.category !== "accessories" && !newItem.fit) || !newItem.condition?.length}
+                  >
+                    Save Changes
+                  </Button>
+                </div>
               </div>
             </DialogContent>
           </Dialog>
