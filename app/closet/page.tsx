@@ -354,202 +354,155 @@ const handleDeleteItem = (id: string) => {
                     <div className="space-y-4">
                       {previewUrl && (
                         <div className="relative mx-auto h-28 w-28 overflow-hidden rounded-xl bg-secondary">
-                          <Image
-                            src={previewUrl}
-                            alt="Preview"
-                            fill
-                            className="object-cover"
-                          />
+                          <Image src={previewUrl} alt="Preview" fill className="object-cover" />
                         </div>
                       )}
-
                       <div className="space-y-3">
-                    <div>
-                      <label className="mb-2 block text-sm font-medium">Name</label>
-                      <Input
-                        placeholder="e.g., Blue Baggy Jeans"
-                        value={newItem.name || ""}
-                        onChange={(e) => setNewItem((prev) => ({ ...prev, name: e.target.value }))}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="mb-2 block text-sm font-medium">Category</label>
-                        <Select
-                          value={newItem.category}
-                          onValueChange={(value) => setNewItem((prev) => ({ ...prev, category: value as ClothingItem["category"], type: "", fit: "", condition: [] }))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select" />
-                          </SelectTrigger>
-<SelectContent>
-                                            <SelectItem value="layer">Layer</SelectItem>
-                                            <SelectItem value="top">Top</SelectItem>
-                                            <SelectItem value="bottom">Bottom</SelectItem>
-                                            <SelectItem value="shoes">Shoes</SelectItem>
-                                            <SelectItem value="accessories">Accessories</SelectItem>
-                                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div>
-                        <label className="mb-2 block text-sm font-medium">Type</label>
-                        <Select
-                          value={newItem.type}
-                          onValueChange={(value) => setNewItem((prev) => ({ ...prev, type: value }))}
-                          disabled={!newItem.category}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {newItem.category &&
-                              categoryTypes[newItem.category].map((type) => (
-                                <SelectItem key={type} value={type}>
-                                  {type}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="mb-2 block text-sm font-medium">Color (select all that apply)</label>
-                      <div className="flex flex-wrap gap-2">
-                        {colorOptions.map((color) => (
-                          <button
-                            key={color.value}
-                            type="button"
-                            className={`h-8 w-8 rounded-full border-2 transition-transform hover:scale-110 ${
-                              newItem.color?.includes(color.value) ? "border-primary ring-2 ring-primary/20" : "border-transparent"
-                            }`}
-                            style={{ backgroundColor: color.hex }}
-                            onClick={() => toggleColor(color.value)}
-                            title={color.label}
+                        <div>
+                          <label className="mb-2 block text-sm font-medium">Name</label>
+                          <Input
+                            placeholder="e.g., Blue Baggy Jeans"
+                            value={newItem.name || ""}
+                            onChange={(e) => setNewItem((prev) => ({ ...prev, name: e.target.value }))}
                           />
-                        ))}
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="mb-2 block text-sm font-medium">Category</label>
+                            <Select
+                              value={newItem.category}
+                              onValueChange={(value) => setNewItem((prev) => ({ ...prev, category: value as ClothingItem["category"], type: "", fit: "", condition: [] }))}
+                            >
+                              <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="layer">Layer</SelectItem>
+                                <SelectItem value="top">Top</SelectItem>
+                                <SelectItem value="bottom">Bottom</SelectItem>
+                                <SelectItem value="shoes">Shoes</SelectItem>
+                                <SelectItem value="accessories">Accessories</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <label className="mb-2 block text-sm font-medium">Type</label>
+                            <Select
+                              value={newItem.type}
+                              onValueChange={(value) => setNewItem((prev) => ({ ...prev, type: value }))}
+                              disabled={!newItem.category}
+                            >
+                              <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                              <SelectContent>
+                                {newItem.category && categoryTypes[newItem.category].map((type) => (
+                                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="mb-2 block text-sm font-medium">Color (select all that apply)</label>
+                          <div className="flex flex-wrap gap-2">
+                            {colorOptions.map((color) => (
+                              <button
+                                key={color.value}
+                                type="button"
+                                className={`h-8 w-8 rounded-full border-2 transition-transform hover:scale-110 ${newItem.color?.includes(color.value) ? "border-primary ring-2 ring-primary/20" : "border-transparent"}`}
+                                style={{ backgroundColor: color.hex }}
+                                onClick={() => toggleColor(color.value)}
+                                title={color.label}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        {newItem.category === "accessories" ? (
+                          <div>
+                            <label className="mb-2 block text-sm font-medium">Condition (select all that apply)</label>
+                            <div className="flex flex-wrap gap-2">
+                              {conditionOptions.map((condition) => (
+                                <button
+                                  key={condition}
+                                  type="button"
+                                  className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${newItem.condition?.includes(condition) ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}
+                                  onClick={() => toggleCondition(condition)}
+                                >
+                                  {condition}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ) : newItem.category === "shoes" ? (
+                          <div>
+                            <label className="mb-2 block text-sm font-medium">Condition (select all that apply)</label>
+                            <div className="flex flex-wrap gap-2">
+                              {shoeConditionOptions.map((condition) => (
+                                <button
+                                  key={condition}
+                                  type="button"
+                                  className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${newItem.condition?.includes(condition) ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}
+                                  onClick={() => toggleCondition(condition)}
+                                >
+                                  {condition}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            <div>
+                              <label className="mb-2 block text-sm font-medium">Fit</label>
+                              <Select value={newItem.fit} onValueChange={(value) => setNewItem((prev) => ({ ...prev, fit: value }))}>
+                                <SelectTrigger><SelectValue placeholder="Select fit" /></SelectTrigger>
+                                <SelectContent>
+                                  {fitOptions.map((fit) => (<SelectItem key={fit} value={fit}>{fit}</SelectItem>))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div>
+                              <label className="mb-2 block text-sm font-medium">Condition (select all that apply)</label>
+                              <div className="flex flex-wrap gap-2">
+                                {(newItem.category === "layer" ? layerConditionOptions : conditionOptions).map((condition) => (
+                                  <button
+                                    key={condition}
+                                    type="button"
+                                    className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${newItem.condition?.includes(condition) ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}
+                                    onClick={() => toggleCondition(condition)}
+                                  >
+                                    {condition}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        <div>
+                          <label className="mb-2 block text-sm font-medium">Best for Weather</label>
+                          <div className="flex flex-wrap gap-2">
+                            {temperatureOptions.map((temp) => (
+                              <button
+                                key={temp.value}
+                                type="button"
+                                className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${newItem.temperature?.includes(temp.value) ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}
+                                onClick={() => toggleTemperature(temp.value)}
+                              >
+                                {temp.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
-
-{newItem.category === "accessories" ? (
-                                      <div>
-                                        <label className="mb-2 block text-sm font-medium">Condition (select all that apply)</label>
-                                        <div className="flex flex-wrap gap-2">
-                                          {conditionOptions.map((condition) => (
-                                            <button
-                                              key={condition}
-                                              type="button"
-                                              className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                                                newItem.condition?.includes(condition)
-                                                  ? "bg-primary text-primary-foreground"
-                                                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                                              }`}
-                                              onClick={() => toggleCondition(condition)}
-                                            >
-                                              {condition}
-                                            </button>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    ) : newItem.category === "shoes" ? (
-                                      <div>
-                                        <label className="mb-2 block text-sm font-medium">Condition (select all that apply)</label>
-                                        <div className="flex flex-wrap gap-2">
-                                          {shoeConditionOptions.map((condition) => (
-                                            <button
-                                              key={condition}
-                                              type="button"
-                                              className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                                                newItem.condition?.includes(condition)
-                                                  ? "bg-primary text-primary-foreground"
-                                                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                                              }`}
-                                              onClick={() => toggleCondition(condition)}
-                                            >
-                                              {condition}
-                                            </button>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    ) : (
-                                      <div className="space-y-4">
-                                        <div>
-                                          <label className="mb-2 block text-sm font-medium">Fit</label>
-                                          <Select
-                                            value={newItem.fit}
-                                            onValueChange={(value) => setNewItem((prev) => ({ ...prev, fit: value }))}
-                                          >
-                                            <SelectTrigger>
-                                              <SelectValue placeholder="Select fit" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              {fitOptions.map((fit) => (
-                                                <SelectItem key={fit} value={fit}>
-                                                  {fit}
-                                                </SelectItem>
-                                              ))}
-                                            </SelectContent>
-                                          </Select>
-                                        </div>
-                                        <div>
-                                          <label className="mb-2 block text-sm font-medium">Condition (select all that apply)</label>
-                                          <div className="flex flex-wrap gap-2">
-                                            {(newItem.category === "layer" ? layerConditionOptions : conditionOptions).map((condition) => (
-                                              <button
-                                                key={condition}
-                                                type="button"
-                                                className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                                                  newItem.condition?.includes(condition)
-                                                    ? "bg-primary text-primary-foreground"
-                                                    : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                                                }`}
-                                                onClick={() => toggleCondition(condition)}
-                                              >
-                                                {condition}
-                                              </button>
-                                            ))}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    )}
-
-                    <div>
-                      <label className="mb-2 block text-sm font-medium">Best for Weather</label>
-                      <div className="flex flex-wrap gap-2">
-                        {temperatureOptions.map((temp) => (
-                          <button
-                            key={temp.value}
-                            type="button"
-                            className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                              newItem.temperature?.includes(temp.value)
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                            }`}
-                            onClick={() => toggleTemperature(temp.value)}
-                          >
-                            {temp.label}
-                          </button>
-                        ))}
-                      </div>
-                      </div>
-                    </div>
+                  </ScrollArea>
+                  <div className="flex gap-3 pt-4">
+                    <Button variant="outline" className="flex-1" onClick={() => setUploadStep(1)}>Back</Button>
+                    <Button
+                      className="flex-1"
+                      onClick={handleSaveItem}
+                      disabled={!newItem.name || !newItem.category || !newItem.type || !newItem.color?.length || !newItem.temperature?.length || (newItem.category !== "shoes" && newItem.category !== "accessories" && !newItem.fit) || !newItem.condition?.length}
+                    >
+                      Add to Closet
+                    </Button>
                   </div>
-                </ScrollArea>
-                <div className="flex gap-3 pt-4">
-                  <Button variant="outline" className="flex-1" onClick={() => setUploadStep(1)}>
-                    Back
-                  </Button>
-                  <Button
-                    className="flex-1"
-                    onClick={handleSaveItem}
-                    disabled={!newItem.name || !newItem.category || !newItem.type || !newItem.color?.length || !newItem.temperature?.length || (newItem.category !== "shoes" && newItem.category !== "accessories" && !newItem.fit) || !newItem.condition?.length}
-                  >
-                    Add to Closet
-                  </Button>
                 </div>
-              </div>
               )}
             </DialogContent>
           </Dialog>
@@ -569,193 +522,146 @@ const handleDeleteItem = (id: string) => {
                   <div className="space-y-4">
                     {previewUrl && (
                       <div className="relative mx-auto h-28 w-28 overflow-hidden rounded-xl bg-secondary">
-                        <Image
-                          src={previewUrl}
-                          alt="Preview"
-                          fill
-                          className="object-cover"
-                        />
+                        <Image src={previewUrl} alt="Preview" fill className="object-cover" />
                       </div>
                     )}
-
                     <div className="space-y-3">
-                  <div>
-                    <label className="mb-2 block text-sm font-medium">Name</label>
-                    <Input
-                      placeholder="e.g., Blue Baggy Jeans"
-                      value={newItem.name || ""}
-                      onChange={(e) => setNewItem((prev) => ({ ...prev, name: e.target.value }))}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="mb-2 block text-sm font-medium">Category</label>
-                      <Select
-                        value={newItem.category}
-                        onValueChange={(value) => setNewItem((prev) => ({ ...prev, category: value as ClothingItem["category"], type: "", fit: "", condition: [] }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="layer">Layer</SelectItem>
-                          <SelectItem value="top">Top</SelectItem>
-                          <SelectItem value="bottom">Bottom</SelectItem>
-                          <SelectItem value="shoes">Shoes</SelectItem>
-                          <SelectItem value="accessories">Accessories</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <label className="mb-2 block text-sm font-medium">Type</label>
-                      <Select
-                        value={newItem.type}
-                        onValueChange={(value) => setNewItem((prev) => ({ ...prev, type: value }))}
-                        disabled={!newItem.category}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {newItem.category &&
-                            categoryTypes[newItem.category].map((type) => (
-                              <SelectItem key={type} value={type}>
-                                {type}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-medium">Color (select all that apply)</label>
-                    <div className="flex flex-wrap gap-2">
-                      {colorOptions.map((color) => (
-                        <button
-                          key={color.value}
-                          type="button"
-                          className={`h-8 w-8 rounded-full border-2 transition-transform hover:scale-110 ${
-                            newItem.color?.includes(color.value) ? "border-primary ring-2 ring-primary/20" : "border-transparent"
-                          }`}
-                          style={{ backgroundColor: color.hex }}
-                          onClick={() => toggleColor(color.value)}
-                          title={color.label}
+                      <div>
+                        <label className="mb-2 block text-sm font-medium">Name</label>
+                        <Input
+                          placeholder="e.g., Blue Baggy Jeans"
+                          value={newItem.name || ""}
+                          onChange={(e) => setNewItem((prev) => ({ ...prev, name: e.target.value }))}
                         />
-                      ))}
-                    </div>
-                  </div>
-
-                  {newItem.category === "accessories" ? (
-                    <div>
-                      <label className="mb-2 block text-sm font-medium">Condition (select all that apply)</label>
-                      <div className="flex flex-wrap gap-2">
-                        {conditionOptions.map((condition) => (
-                          <button
-                            key={condition}
-                            type="button"
-                            className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                              newItem.condition?.includes(condition)
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                            }`}
-                            onClick={() => toggleCondition(condition)}
-                          >
-                            {condition}
-                          </button>
-                        ))}
                       </div>
-                    </div>
-                  ) : newItem.category === "shoes" ? (
-                    <div>
-                      <label className="mb-2 block text-sm font-medium">Condition (select all that apply)</label>
-                      <div className="flex flex-wrap gap-2">
-                        {shoeConditionOptions.map((condition) => (
-                          <button
-                            key={condition}
-                            type="button"
-                            className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                              newItem.condition?.includes(condition)
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                            }`}
-                            onClick={() => toggleCondition(condition)}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="mb-2 block text-sm font-medium">Category</label>
+                          <Select
+                            value={newItem.category}
+                            onValueChange={(value) => setNewItem((prev) => ({ ...prev, category: value as ClothingItem["category"], type: "", fit: "", condition: [] }))}
                           >
-                            {condition}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div>
-                        <label className="mb-2 block text-sm font-medium">Fit</label>
-                        <Select
-                          value={newItem.fit}
-                          onValueChange={(value) => setNewItem((prev) => ({ ...prev, fit: value }))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select fit" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {fitOptions.map((fit) => (
-                              <SelectItem key={fit} value={fit}>
-                                {fit}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                            <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="layer">Layer</SelectItem>
+                              <SelectItem value="top">Top</SelectItem>
+                              <SelectItem value="bottom">Bottom</SelectItem>
+                              <SelectItem value="shoes">Shoes</SelectItem>
+                              <SelectItem value="accessories">Accessories</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <label className="mb-2 block text-sm font-medium">Type</label>
+                          <Select
+                            value={newItem.type}
+                            onValueChange={(value) => setNewItem((prev) => ({ ...prev, type: value }))}
+                            disabled={!newItem.category}
+                          >
+                            <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                            <SelectContent>
+                              {newItem.category && categoryTypes[newItem.category].map((type) => (
+                                <SelectItem key={type} value={type}>{type}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                       <div>
-                        <label className="mb-2 block text-sm font-medium">Condition (select all that apply)</label>
+                        <label className="mb-2 block text-sm font-medium">Color (select all that apply)</label>
                         <div className="flex flex-wrap gap-2">
-                          {(newItem.category === "layer" ? layerConditionOptions : conditionOptions).map((condition) => (
+                          {colorOptions.map((color) => (
                             <button
-                              key={condition}
+                              key={color.value}
                               type="button"
-                              className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                                newItem.condition?.includes(condition)
-                                  ? "bg-primary text-primary-foreground"
-                                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                              }`}
-                              onClick={() => toggleCondition(condition)}
+                              className={`h-8 w-8 rounded-full border-2 transition-transform hover:scale-110 ${newItem.color?.includes(color.value) ? "border-primary ring-2 ring-primary/20" : "border-transparent"}`}
+                              style={{ backgroundColor: color.hex }}
+                              onClick={() => toggleColor(color.value)}
+                              title={color.label}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      {newItem.category === "accessories" ? (
+                        <div>
+                          <label className="mb-2 block text-sm font-medium">Condition (select all that apply)</label>
+                          <div className="flex flex-wrap gap-2">
+                            {conditionOptions.map((condition) => (
+                              <button
+                                key={condition}
+                                type="button"
+                                className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${newItem.condition?.includes(condition) ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}
+                                onClick={() => toggleCondition(condition)}
+                              >
+                                {condition}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ) : newItem.category === "shoes" ? (
+                        <div>
+                          <label className="mb-2 block text-sm font-medium">Condition (select all that apply)</label>
+                          <div className="flex flex-wrap gap-2">
+                            {shoeConditionOptions.map((condition) => (
+                              <button
+                                key={condition}
+                                type="button"
+                                className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${newItem.condition?.includes(condition) ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}
+                                onClick={() => toggleCondition(condition)}
+                              >
+                                {condition}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          <div>
+                            <label className="mb-2 block text-sm font-medium">Fit</label>
+                            <Select value={newItem.fit} onValueChange={(value) => setNewItem((prev) => ({ ...prev, fit: value }))}>
+                              <SelectTrigger><SelectValue placeholder="Select fit" /></SelectTrigger>
+                              <SelectContent>
+                                {fitOptions.map((fit) => (<SelectItem key={fit} value={fit}>{fit}</SelectItem>))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <label className="mb-2 block text-sm font-medium">Condition (select all that apply)</label>
+                            <div className="flex flex-wrap gap-2">
+                              {(newItem.category === "layer" ? layerConditionOptions : conditionOptions).map((condition) => (
+                                <button
+                                  key={condition}
+                                  type="button"
+                                  className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${newItem.condition?.includes(condition) ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}
+                                  onClick={() => toggleCondition(condition)}
+                                >
+                                  {condition}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      <div>
+                        <label className="mb-2 block text-sm font-medium">Best for Weather</label>
+                        <div className="flex flex-wrap gap-2">
+                          {temperatureOptions.map((temp) => (
+                            <button
+                              key={temp.value}
+                              type="button"
+                              className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${newItem.temperature?.includes(temp.value) ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}
+                              onClick={() => toggleTemperature(temp.value)}
                             >
-                              {condition}
+                              {temp.label}
                             </button>
                           ))}
                         </div>
                       </div>
                     </div>
-                  )}
-
-                  <div>
-                    <label className="mb-2 block text-sm font-medium">Best for Weather</label>
-                    <div className="flex flex-wrap gap-2">
-                      {temperatureOptions.map((temp) => (
-                        <button
-                          key={temp.value}
-                          type="button"
-                          className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                            newItem.temperature?.includes(temp.value)
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                          }`}
-                          onClick={() => toggleTemperature(temp.value)}
-                        >
-                          {temp.label}
-                        </button>
-                      ))}
-                  </div>
-                    </div>
                   </div>
                 </ScrollArea>
-
                 <div className="flex gap-3 pt-4">
-                  <Button variant="outline" className="flex-1" onClick={resetEdit}>
-                    Cancel
-                  </Button>
+                  <Button variant="outline" className="flex-1" onClick={resetEdit}>Cancel</Button>
                   <Button
                     className="flex-1"
                     onClick={handleSaveEdit}
