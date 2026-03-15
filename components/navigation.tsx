@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Shirt, Sun, Settings } from "lucide-react"
+import { SignInButton } from "@/components/sign-in-button"
 
 const navItems = [
   { href: "/closet", label: "My Closet", icon: Shirt },
@@ -44,6 +45,9 @@ export function Navigation() {
               </Link>
             )
           })}
+          <div className="ml-2 pl-2 border-l border-border">
+            <SignInButton />
+          </div>
         </div>
 
         <div className="flex items-center gap-3 md:hidden">
@@ -65,6 +69,7 @@ export function Navigation() {
               </Link>
             )
           })}
+          <SignInButton />
         </div>
       </nav>
     </header>

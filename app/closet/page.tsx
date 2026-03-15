@@ -21,7 +21,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Plus, Upload, X, Shirt, Sparkles, Heart, Trash2, Pencil } from "lucide-react"
+import { Plus, Upload, X, Shirt, Sparkles, Heart, Trash2, Pencil, Cloud, CloudOff, Loader2 } from "lucide-react"
+import { useClosetSync } from "@/hooks/use-closet-sync"
+import { useAuth } from "@/components/auth-provider"
 
 interface ClothingItem {
   id: string
@@ -82,42 +84,23 @@ const temperatureOptions = [
   { value: "n/a", label: "N/A" },
 ]
 
-const STORAGE_KEY = "stylist-closet"
-const SAVED_OUTFITS_KEY = "stylist-saved-outfits"
 
-function getStoredClothes(): ClothingItem[] {
-  if (typeof window === "undefined") return []
-  const stored = localStorage.getItem(STORAGE_KEY)
-  return stored ? JSON.parse(stored) : []
-}
-
-function saveClothes(clothes: ClothingItem[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(clothes))
-}
-
-function getSavedOutfits(): Outfit[] {
-  if (typeof window === "undefined") return []
-  const stored = localStorage.getItem(SAVED_OUTFITS_KEY)
-  return stored ? JSON.parse(stored) : []
-}
-
-function deleteSavedOutfit(index: number) {
-  const saved = getSavedOutfits()
-  saved.splice(index, 1)
-  localStorage.setItem(SAVED_OUTFITS_KEY, JSON.stringify(saved))
-}
 
 export default function ClosetPage() {
-  const [clothes, setClothes] = useState<ClothingItem[]>([])
-  const [savedOutfits, setSavedOutfits] = useState<Outfit[]>([])
+  const { user } = useAuth()
+  const { 
+    clothes, 
+    savedOutfits, 
+    isLoading, 
+    isSyncing, 
+    addItem, 
+    updateItem, 
+    deleteItem, 
+    deleteOutfit 
+  } = useClosetSync()
   const [isUploadOpen, setIsUploadOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<ClothingItem | null>(null)
-  
-  useEffect(() => {
-    setClothes(getStoredClothes())
-    setSavedOutfits(getSavedOutfits())
-  }, [])
   const [uploadStep, setUploadStep] = useState(1)
   const [newItem, setNewItem] = useState<Partial<ClothingItem>>({
     temperature: [],
@@ -162,7 +145,7 @@ export default function ClosetPage() {
     }
   }
 
-  const handleSaveItem = () => {
+  const handleSaveItem = async () => {
     const isShoes = newItem.category === "shoes"
     const isAccessories = newItem.category === "accessories"
     const hasBaseFields = newItem.name && newItem.category && newItem.type && newItem.color?.length && newItem.temperature?.length && newItem.imageUrl
@@ -170,33 +153,26 @@ export default function ClosetPage() {
     const hasCondition = (newItem.condition?.length ?? 0) > 0
     
     if (hasRequiredFields && hasCondition) {
-      const item: ClothingItem = {
-        id: Date.now().toString(),
-        name: newItem.name,
+      await addItem({
+        name: newItem.name!,
         category: newItem.category as ClothingItem["category"],
-        type: newItem.type,
+        type: newItem.type!,
         color: newItem.color || [],
-        fit: (isAccessories || isShoes) ? "N/A" : newItem.fit,
+        fit: (isAccessories || isShoes) ? "N/A" : newItem.fit!,
         condition: newItem.condition || [],
-        temperature: newItem.temperature,
-        imageUrl: newItem.imageUrl,
-      }
-      const updatedClothes = [...clothes, item]
-      setClothes(updatedClothes)
-      saveClothes(updatedClothes)
+        temperature: newItem.temperature!,
+        imageUrl: newItem.imageUrl!,
+      })
       resetUpload()
     }
   }
 
-const handleDeleteItem = (id: string) => {
-    const updatedClothes = clothes.filter((c) => c.id !== id)
-    setClothes(updatedClothes)
-    saveClothes(updatedClothes)
+const handleDeleteItem = async (id: string) => {
+    await deleteItem(id)
   }
 
-  const handleDeleteOutfit = (index: number) => {
-    deleteSavedOutfit(index)
-    setSavedOutfits(getSavedOutfits())
+  const handleDeleteOutfit = async (index: number) => {
+    await deleteOutfit(index)
   }
 
   const handleEditItem = (item: ClothingItem) => {
