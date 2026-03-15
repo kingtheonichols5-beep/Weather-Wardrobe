@@ -1,9 +1,12 @@
-import { NextResponse, type NextRequest } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 
-export async function middleware(request: NextRequest) {
-  // Simple pass-through middleware
-  // Supabase session handling is done in server components/actions
-  return NextResponse.next()
+export function middleware(request: NextRequest) {
+  // Pass-through middleware - Supabase auth is handled in server components
+  return NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
 }
 
 export const config = {
